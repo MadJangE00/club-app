@@ -53,10 +53,11 @@ export default function JoinButton({ clubId }: Props) {
 
       if (!existingUser) {
         // users 테이블에 사용자 추가
+        const userName = (user.user_metadata?.name as string) || user.email?.split("@")[0] || "사용자";
         const { error: userError } = await supabase.from("users").insert({
           id: user.id,
           email: user.email || "",
-          name: user.user_metadata?.name || user.email?.split("@")[0] || "사용자",
+          name: userName,
         });
 
         if (userError) {
