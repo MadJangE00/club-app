@@ -35,10 +35,11 @@ export default function EditProfilePage() {
         .single();
 
       if (data) {
+        const profile = data as any;
         setForm({
-          name: data.name || "",
-          nickname: data.nickname || "",
-          phone: data.phone || "",
+          name: profile.name || "",
+          nickname: profile.nickname || "",
+          phone: profile.phone || "",
         });
       }
 
@@ -56,14 +57,15 @@ export default function EditProfilePage() {
     setMessage("");
 
     try {
+      const updateData = {
+        name: form.name,
+        nickname: form.nickname || null,
+        phone: form.phone || null,
+        updated_at: new Date().toISOString(),
+      };
       const { error } = await supabase
         .from("users")
-        .update({
-          name: form.name,
-          nickname: form.nickname || null,
-          phone: form.phone || null,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData as any)
         .eq("id", user.id);
 
       if (error) throw error;

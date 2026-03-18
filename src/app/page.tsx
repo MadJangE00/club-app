@@ -28,7 +28,7 @@ async function getRecentClubs() {
       .select("id, name, description, created_at")
       .order("created_at", { ascending: false })
       .limit(5);
-    return data || [];
+    return (data || []) as any[];
   } catch (error) {
     console.error("Clubs fetch error:", error);
     return [];
@@ -110,9 +110,10 @@ export default async function Home() {
         {recentClubs.length > 0 ? (
           <div className="space-y-3">
             {recentClubs.map((club) => (
-              <div
+              <a
                 key={club.id}
-                className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                href={`/clubs/${club.id}`}
+                className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <div className="font-bold text-gray-900">{club.name}</div>
                 {club.description && (
@@ -120,7 +121,7 @@ export default async function Home() {
                     {club.description}
                   </div>
                 )}
-              </div>
+              </a>
             ))}
           </div>
         ) : (

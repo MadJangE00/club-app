@@ -13,7 +13,7 @@ async function getClub(id: string) {
     .eq("id", id)
     .single();
   
-  return data;
+  return data as any;
 }
 
 async function getMembers(clubId: string) {
@@ -28,7 +28,7 @@ async function getMembers(clubId: string) {
     .eq("club_id", clubId)
     .order("joined_at", { ascending: true });
   
-  return data || [];
+  return (data || []) as any[];
 }
 
 async function getEvents(clubId: string) {
@@ -38,7 +38,7 @@ async function getEvents(clubId: string) {
     .eq("club_id", clubId)
     .order("event_date", { ascending: true });
   
-  return data || [];
+  return (data || []) as any[];
 }
 
 async function getPosts(clubId: string) {
@@ -55,7 +55,7 @@ async function getPosts(clubId: string) {
     .order("created_at", { ascending: false })
     .limit(5);
   
-  return data || [];
+  return (data || []) as any[];
 }
 
 export default async function ClubDetailPage({ 
@@ -116,7 +116,7 @@ export default async function ClubDetailPage({
           <h3 className="text-lg font-bold text-gray-900 mb-4">👥 멤버 ({members.length})</h3>
           {members.length > 0 ? (
             <div className="space-y-2">
-              {members.map((member: any) => (
+              {members.map((member) => (
                 <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="font-medium text-gray-900">
                     {member.users?.nickname || member.users?.name || "사용자"}
@@ -187,7 +187,7 @@ export default async function ClubDetailPage({
         </div>
         {posts.length > 0 ? (
           <div className="divide-y">
-            {posts.map((post: any) => (
+            {posts.map((post) => (
               <Link
                 key={post.id}
                 href={`/posts/${post.id}`}

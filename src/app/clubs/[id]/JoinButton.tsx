@@ -58,7 +58,7 @@ export default function JoinButton({ clubId }: Props) {
           id: user.id,
           email: user.email || "",
           name: userName,
-        });
+        } as any);
 
         if (userError) {
           console.error("Error creating user:", userError);
@@ -71,7 +71,7 @@ export default function JoinButton({ clubId }: Props) {
         club_id: clubId,
         user_id: user.id,
         role: "member",
-      });
+      } as any);
 
       if (error) {
         console.error("Error joining club:", error);

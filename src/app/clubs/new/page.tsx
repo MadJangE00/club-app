@@ -39,18 +39,19 @@ export default function NewClubPage() {
 
       if (!existingUser) {
         // users 테이블에 사용자 추가
+        const userName = (user.user_metadata?.name as string) || user.email?.split("@")[0] || "사용자";
         await supabase.from("users").insert({
           id: user.id,
           email: user.email || "",
-          name: user.user_metadata?.name || user.email?.split("@")[0] || "사용자",
-        });
+          name: userName,
+        } as any);
       }
 
       const { error } = await supabase.from("clubs").insert({
         name: form.name,
         description: form.description || null,
         owner_id: user.id,
-      });
+      } as any);
 
       if (error) throw error;
 

@@ -33,7 +33,7 @@ export default function AttendButton({ eventId, maxParticipants, currentCount }:
           .single();
 
         if (data) {
-          setStatus(data.status);
+          setStatus((data as any).status);
         }
       }
 
@@ -64,7 +64,7 @@ export default function AttendButton({ eventId, maxParticipants, currentCount }:
             event_id: eventId,
             user_id: user.id,
             status: newStatus,
-          },
+          } as any,
           {
             onConflict: "event_id,user_id",
           }
@@ -107,7 +107,7 @@ export default function AttendButton({ eventId, maxParticipants, currentCount }:
     <div className="flex gap-2">
       <button
         onClick={() => handleAttend("attending")}
-        disabled={isFull && status !== "attending"}
+        disabled={!!isFull && status !== "attending"}
         className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
           status === "attending"
             ? "bg-green-600 text-white ring-2 ring-green-300"

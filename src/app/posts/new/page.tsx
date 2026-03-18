@@ -27,9 +27,10 @@ export default function NewPostPage() {
 
     async function fetchClubs() {
       const { data } = await supabase.from("clubs").select("id, name");
-      setClubs(data || []);
-      if (data && data.length > 0) {
-        setForm((prev) => ({ ...prev, club_id: data[0].id }));
+      const clubList = (data || []) as { id: string; name: string }[];
+      setClubs(clubList);
+      if (clubList.length > 0) {
+        setForm((prev) => ({ ...prev, club_id: clubList[0].id }));
       }
     }
     fetchClubs();
@@ -46,7 +47,7 @@ export default function NewPostPage() {
         title: form.title,
         content: form.content,
         user_id: user.id,
-      });
+      } as any);
 
       if (error) throw error;
 

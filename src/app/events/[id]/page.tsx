@@ -20,7 +20,7 @@ async function getEvent(id: string) {
     .eq("id", id)
     .single();
   
-  return data;
+  return data as any;
 }
 
 async function getAttendance(eventId: string) {
@@ -37,7 +37,7 @@ async function getAttendance(eventId: string) {
     `)
     .eq("event_id", eventId);
   
-  return data || [];
+  return (data || []) as any[];
 }
 
 export default async function EventDetailPage({ 
@@ -54,9 +54,9 @@ export default async function EventDetailPage({
 
   const attendance = await getAttendance(id);
   
-  const attending = attendance.filter((a: any) => a.status === "attending");
-  const maybe = attendance.filter((a: any) => a.status === "maybe");
-  const notAttending = attendance.filter((a: any) => a.status === "not_attending");
+  const attending = attendance.filter((a) => a.status === "attending");
+  const maybe = attendance.filter((a) => a.status === "maybe");
+  const notAttending = attendance.filter((a) => a.status === "not_attending");
 
   return (
     <div className="space-y-6">
@@ -135,7 +135,7 @@ export default async function EventDetailPage({
           </h3>
           {attending.length > 0 ? (
             <div className="space-y-2">
-              {attending.map((a: any) => (
+              {attending.map((a) => (
                 <div key={a.id} className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
                   <span className="w-8 h-8 bg-green-200 rounded-full flex items-center justify-center text-sm font-medium text-green-800">
                     {(a.users?.nickname || a.users?.name || "U")[0]}
@@ -158,7 +158,7 @@ export default async function EventDetailPage({
           </h3>
           {maybe.length > 0 ? (
             <div className="space-y-2">
-              {maybe.map((a: any) => (
+              {maybe.map((a) => (
                 <div key={a.id} className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg">
                   <span className="w-8 h-8 bg-yellow-200 rounded-full flex items-center justify-center text-sm font-medium text-yellow-800">
                     {(a.users?.nickname || a.users?.name || "U")[0]}
@@ -181,7 +181,7 @@ export default async function EventDetailPage({
           </h3>
           {notAttending.length > 0 ? (
             <div className="space-y-2">
-              {notAttending.map((a: any) => (
+              {notAttending.map((a) => (
                 <div key={a.id} className="flex items-center gap-2 p-2 bg-red-50 rounded-lg">
                   <span className="w-8 h-8 bg-red-200 rounded-full flex items-center justify-center text-sm font-medium text-red-800">
                     {(a.users?.nickname || a.users?.name || "U")[0]}

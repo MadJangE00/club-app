@@ -17,7 +17,7 @@ export default function NewEventPage() {
     event_date: "",
     location: "",
     max_participants: "",
-  });
+  } as any);
 
   useEffect(() => {
     async function init() {
@@ -43,7 +43,7 @@ export default function NewEventPage() {
       setClubs(userClubs);
       
       if (userClubs.length > 0) {
-        setForm((prev) => ({ ...prev, club_id: userClubs[0].id }));
+        setForm((prev: any) => ({ ...prev, club_id: userClubs[0].id }));
       }
     }
     
@@ -64,7 +64,7 @@ export default function NewEventPage() {
         location: form.location || null,
         max_participants: form.max_participants ? parseInt(form.max_participants) : null,
         created_by: user.id,
-      });
+      } as any);
 
       if (error) throw error;
 

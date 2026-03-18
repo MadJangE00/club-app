@@ -17,7 +17,7 @@ async function getEvents() {
       )
     `)
     .order("event_date", { ascending: true });
-  return data || [];
+  return (data || []) as any[];
 }
 
 async function getAttendanceCount(eventIds: string[]) {
@@ -30,7 +30,7 @@ async function getAttendanceCount(eventIds: string[]) {
     .eq("status", "attending");
 
   const counts: Record<string, number> = {};
-  data?.forEach((a) => {
+  data?.forEach((a: any) => {
     counts[a.event_id] = (counts[a.event_id] || 0) + 1;
   });
   

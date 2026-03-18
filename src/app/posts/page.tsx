@@ -18,7 +18,7 @@ async function getPosts() {
       )
     `)
     .order("created_at", { ascending: false });
-  return data || [];
+  return (data || []) as any[];
 }
 
 export default async function PostsPage() {

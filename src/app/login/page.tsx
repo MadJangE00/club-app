@@ -42,7 +42,7 @@ export default function LoginPage() {
             id: data.user.id,
             email: form.email,
             name: form.name,
-          });
+          } as any);
         }
 
         setMessage("회원가입 완료! 이메일을 확인해주세요.");

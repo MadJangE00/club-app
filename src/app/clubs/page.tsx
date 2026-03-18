@@ -6,7 +6,7 @@ async function getClubs() {
     .from("clubs")
     .select("*")
     .order("created_at", { ascending: false });
-  return data || [];
+  return (data || []) as any[];
 }
 
 export default async function ClubsPage() {
@@ -15,10 +15,10 @@ export default async function ClubsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">🏠 동호회 목록</h2>
+        <h2 className="text-2xl font-bold text-gray-900">🏠 동호회 목록</h2>
         <Link
           href="/clubs/new"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
           + 새 동호회
         </Link>

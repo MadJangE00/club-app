@@ -5,36 +5,11 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 
-interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  nickname: string | null;
-  phone: string | null;
-  profile_image: string | null;
-  points: number;
-  created_at: string;
-}
-
-interface AttendanceRecord {
-  id: string;
-  event_id: string;
-  status: string;
-  attended_at: string | null;
-  events: {
-    title: string;
-    event_date: string;
-    clubs: {
-      name: string;
-    };
-  };
-}
-
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [profile, setProfile] = useState<any>(null);
+  const [attendance, setAttendance] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalAttendance: 0,
     attendingCount: 0,
@@ -64,11 +39,12 @@ export default function ProfilePage() {
         setProfile(profileData);
       } else {
         // 프로필이 없으면 생성
+        const userName = (user.user_metadata?.name as string) || "사용자";
         const newProfile = {
           id: user.id,
           email: user.email || "",
-          name: user.user_metadata?.name || "사용자",
-          nickname: user.user_metadata?.name || null,
+          name: userName,
+          nickname: userName,
         };
         const { data } = await supabase.from("users").insert(newProfile).select().single();
         setProfile(data);
@@ -94,11 +70,11 @@ export default function ProfilePage() {
         .order("created_at", { ascending: false });
 
       if (attendanceData) {
-        setAttendance(attendanceData);
+        setAttendance(attendanceData as any[]);
         setStats({
           totalAttendance: attendanceData.length,
-          attendingCount: attendanceData.filter((a) => a.status === "attending").length,
-          maybeCount: attendanceData.filter((a) => a.status === "maybe").length,
+          attendingCount: attendanceData.filter((a: any) => a.status === "attending").length,
+          maybeCount: attendanceData.filter((a: any) => a.status === "maybe").length,
         });
       }
 
@@ -154,7 +130,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-4 gap-4 mt-8 pt-8 border-t border-gray-200">
           <div className="text-center">
             <div className="text-3xl font-bold text-yellow-500">⭐</div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">{profile.points}</div>
+            <div className="text-2xl font-bold text-gray-900 mt-1">{profile.points || 0}</div>
             <div className="text-gray-600 text-sm">포인트</div>
           </div>
           <div className="text-center">
@@ -193,7 +169,7 @@ export default function ProfilePage() {
         
         {attendance.length > 0 ? (
           <div className="space-y-3">
-            {attendance.map((record) => (
+            {attendance.map((record: any) => (
               <div
                 key={record.id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
