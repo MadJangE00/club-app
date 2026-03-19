@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import JoinButton from "./JoinButton";
 import ClubActions from "./ClubActions";
+import Calendar from "./Calendar";
 import Link from "next/link";
 
 // ISR: 30초마다 재생성
@@ -117,6 +118,9 @@ export default async function ClubDetailPage({
         </div>
       </div>
 
+      {/* 캘린더 */}
+      <Calendar events={events} clubId={id} />
+
       <div className="grid lg:grid-cols-2 gap-6">
         {/* 멤버 목록 */}
         <div className="bg-white rounded-xl shadow p-6">
@@ -145,72 +149,37 @@ export default async function ClubDetailPage({
           )}
         </div>
 
-        {/* 다가오는 모임 */}
+        {/* 게시글 */}
         <div className="bg-white rounded-xl shadow p-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-900">📅 모임</h3>
+            <h3 className="text-lg font-bold text-gray-900">📝 게시글</h3>
             <Link
-              href={`/events/new?club=${id}`}
+              href={`/posts/new?club=${id}`}
               className="text-sm text-blue-600 hover:underline"
             >
-              + 새 모임
+              + 새 게시글
             </Link>
           </div>
-          {events.length > 0 ? (
-            <div className="space-y-2">
-              {events.slice(0, 5).map((event) => (
-                <div key={event.id} className="p-3 bg-gray-50 rounded-lg">
-                  <div className="font-medium text-gray-900">{event.title}</div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    {new Date(event.event_date).toLocaleDateString("ko-KR", {
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+          {posts.length > 0 ? (
+            <div className="divide-y">
+              {posts.map((post) => (
+                <Link
+                  key={post.id}
+                  href={`/posts/${post.id}`}
+                  className="block py-4 hover:bg-gray-50 -mx-6 px-6"
+                >
+                  <div className="font-medium text-gray-900">{post.title}</div>
+                  <div className="flex justify-between mt-1 text-sm text-gray-500">
+                    <span>{post.users?.nickname || post.users?.name || "사용자"}</span>
+                    <span>{new Date(post.created_at).toLocaleDateString("ko-KR")}</span>
                   </div>
-                  {event.location && (
-                    <div className="text-sm text-gray-500">📍 {event.location}</div>
-                  )}
-                </div>
+                </Link>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-4">아직 모임이 없습니다</p>
+            <p className="text-gray-500 text-center py-4">아직 게시글이 없습니다</p>
           )}
         </div>
-      </div>
-
-      {/* 게시글 */}
-      <div className="bg-white rounded-xl shadow p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-gray-900">📝 게시글</h3>
-          <Link
-            href={`/posts/new?club=${id}`}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            + 새 게시글
-          </Link>
-        </div>
-        {posts.length > 0 ? (
-          <div className="divide-y">
-            {posts.map((post) => (
-              <Link
-                key={post.id}
-                href={`/posts/${post.id}`}
-                className="block py-4 hover:bg-gray-50 -mx-6 px-6"
-              >
-                <div className="font-medium text-gray-900">{post.title}</div>
-                <div className="flex justify-between mt-1 text-sm text-gray-500">
-                  <span>{post.users?.nickname || post.users?.name || "사용자"}</span>
-                  <span>{new Date(post.created_at).toLocaleDateString("ko-KR")}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-4">아직 게시글이 없습니다</p>
-        )}
       </div>
     </div>
   );
