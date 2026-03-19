@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import JoinButton from "./JoinButton";
+import ClubActions from "./ClubActions";
 import Link from "next/link";
 
 // 캐싱 비활성화 - 실시간 데이터 반영
@@ -94,7 +95,10 @@ export default async function ClubDetailPage({
               생성일: {new Date(club.created_at).toLocaleDateString("ko-KR")}
             </div>
           </div>
-          <JoinButton clubId={id} />
+          <div className="flex gap-2 items-center">
+            <JoinButton clubId={id} />
+            <ClubActions clubId={id} ownerId={club.owner_id} />
+          </div>
         </div>
       </div>
 

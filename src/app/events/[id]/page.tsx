@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import AttendButton from "./AttendButton";
+import EventActions from "./EventActions";
 
 // 캐싱 비활성화 - 실시간 데이터 반영
 export const dynamic = "force-dynamic";
@@ -79,11 +80,18 @@ export default async function EventDetailPage({
               <p className="text-gray-700 mt-3 text-lg">{event.description}</p>
             )}
           </div>
-          <AttendButton 
-            eventId={id} 
-            maxParticipants={event.max_participants}
-            currentCount={attending.length}
-          />
+          <div className="flex gap-2 items-center">
+            <AttendButton 
+              eventId={id} 
+              maxParticipants={event.max_participants}
+              currentCount={attending.length}
+            />
+            <EventActions 
+              eventId={id} 
+              createdBy={event.created_by}
+              clubId={event.club_id}
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-8 border-t border-gray-200">
