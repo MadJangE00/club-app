@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthButton from "@/components/AuthButton";
+import AdminLink from "@/components/AdminLink";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
               <a href="/events" className="text-gray-700 hover:text-black">모임</a>
               <a href="/posts" className="text-gray-700 hover:text-black">게시판</a>
               <a href="/photos" className="text-pink-600 hover:text-pink-800">📷 사진</a>
+              <AdminLink />
               <AuthButton />
             </div>
           </div>
