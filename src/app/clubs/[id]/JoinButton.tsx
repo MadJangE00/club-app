@@ -91,6 +91,52 @@ export default function JoinButton({ clubId }: Props) {
     if (!user) return;
 
     try {
+      // 회장인지 확인
+      const { data: club } = await supabase
+        .from("clubs")
+        .select("owner_id")
+        .eq("id", clubId)
+        .single();
+
+      if (club?.owner_id === user.id) {
+        // 회장이면 다른 멤버 찾기 (가장 오래된)
+        const { data: members } = await supabase
+          .from("club_members")
+          .select("user_id")
+          .eq("club_id", clubId)
+          .neq("user_id", user.id)
+          .order("joined_at", { ascending: true })
+          .limit(1);
+
+        if (!members || members.length === 0) {
+          alert("회장은 회원이 있을 때만 탈퇴할 수 있습니다.\n먼저 회장을 위임하거나 동호회를 삭제하세요.");
+          return;
+        }
+
+        // 새 회장에게 위임
+        const newOwnerId = members[0].user_id;
+        
+        // 동호회 소유자 변경
+        await supabase
+          .from("clubs")
+          .update({ owner_id: newOwnerId })
+          .eq("id", clubId);
+
+        // 새 소유자 role 변경
+        await supabase
+          .from("club_members")
+          .update({ role: "owner" })
+          .eq("club_id", clubId)
+          .eq("user_id", newOwnerId);
+
+        // 기존 소유자 role 변경
+        await supabase
+          .from("club_members")
+          .update({ role: "member" })
+          .eq("club_id", clubId)
+          .eq("user_id", user.id);
+      }
+
       const { error } = await supabase
         .from("club_members")
         .delete()
