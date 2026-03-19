@@ -17,23 +17,34 @@ export default function NewPostPage() {
   });
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) {
         router.push("/login");
       } else {
         setUser(user);
+        
+        // 사용자가 가입한 동호회만 가져오기
+        const { data: memberships } = await supabase
+          .from("club_members")
+          .select(`
+            club_id,
+            clubs (
+              id,
+              name
+            )
+          `)
+          .eq("user_id", user.id);
+        
+        const clubList = (memberships || [])
+          .map((m: any) => m.clubs)
+          .filter(Boolean) as { id: string; name: string }[];
+        
+        setClubs(clubList);
+        if (clubList.length > 0) {
+          setForm((prev) => ({ ...prev, club_id: clubList[0].id }));
+        }
       }
     });
-
-    async function fetchClubs() {
-      const { data } = await supabase.from("clubs").select("id, name");
-      const clubList = (data || []) as { id: string; name: string }[];
-      setClubs(clubList);
-      if (clubList.length > 0) {
-        setForm((prev) => ({ ...prev, club_id: clubList[0].id }));
-      }
-    }
-    fetchClubs();
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,6 +75,26 @@ export default function NewPostPage() {
     return (
       <div className="text-center py-20">
         <p className="text-gray-600">로그인이 필요합니다...</p>
+      </div>
+    );
+  }
+
+  // 가입한 동호회가 없을 때
+  if (clubs.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">✏️ 게시글 작성</h2>
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <div className="text-5xl mb-4">🔒</div>
+          <p className="text-gray-700 text-lg mb-2">가입한 동호회가 없습니다</p>
+          <p className="text-gray-500 mb-6">게시글을 작성하려면 먼저 동호회에 가입해주세요</p>
+          <button
+            onClick={() => router.push("/clubs")}
+            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            동호회 둘러보기
+          </button>
+        </div>
       </div>
     );
   }
