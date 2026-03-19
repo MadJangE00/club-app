@@ -91,8 +91,14 @@ export default async function ClubDetailPage({
             {club.description && (
               <p className="text-gray-700 mt-2 text-lg">{club.description}</p>
             )}
-            <div className="text-sm text-gray-500 mt-4">
-              생성일: {new Date(club.created_at).toLocaleDateString("ko-KR")}
+            <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
+              <span>
+                👑 회장: <span className="font-medium text-gray-900">
+                  {club.users?.nickname || club.users?.name || "알 수 없음"}
+                </span>
+              </span>
+              <span>|</span>
+              <span>생성일: {new Date(club.created_at).toLocaleDateString("ko-KR")}</span>
             </div>
           </div>
           <div className="flex gap-2 items-center">

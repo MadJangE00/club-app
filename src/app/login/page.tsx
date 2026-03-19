@@ -45,7 +45,13 @@ export default function LoginPage() {
           } as any);
         }
 
-        setMessage("회원가입 완료! 이메일을 확인해주세요.");
+        setMessage("회원가입 완료! 환영합니다.");
+        
+        // 바로 로그인 처리
+        setTimeout(() => {
+          router.push("/");
+          router.refresh();
+        }, 1000);
       } else {
         // 로그인
         const { error } = await supabase.auth.signInWithPassword({

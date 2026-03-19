@@ -47,13 +47,22 @@ export default function NewClubPage() {
         } as any);
       }
 
-      const { error } = await supabase.from("clubs").insert({
+      const { data: club, error } = await supabase.from("clubs").insert({
         name: form.name,
         description: form.description || null,
         owner_id: user.id,
-      } as any);
+      } as any).select("id").single();
 
       if (error) throw error;
+
+      // 동호회 생성자를 멤버로 추가 (owner role)
+      if (club) {
+        await supabase.from("club_members").insert({
+          club_id: club.id,
+          user_id: user.id,
+          role: "owner",
+        } as any);
+      }
 
       router.push("/clubs");
     } catch (error: any) {

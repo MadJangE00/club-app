@@ -12,8 +12,45 @@ async function getClubs() {
   return (data || []) as any[];
 }
 
+async function getMemberCounts(clubIds: string[]) {
+  if (clubIds.length === 0) return {};
+  
+  const { data } = await supabase
+    .from("club_members")
+    .select("club_id")
+    .in("club_id", clubIds);
+
+  const counts: Record<string, number> = {};
+  data?.forEach((m: any) => {
+    counts[m.club_id] = (counts[m.club_id] || 0) + 1;
+  });
+  
+  return counts;
+}
+
+async function getEventCounts(clubIds: string[]) {
+  if (clubIds.length === 0) return {};
+  
+  const { data } = await supabase
+    .from("events")
+    .select("club_id")
+    .in("club_id", clubIds);
+
+  const counts: Record<string, number> = {};
+  data?.forEach((e: any) => {
+    counts[e.club_id] = (counts[e.club_id] || 0) + 1;
+  });
+  
+  return counts;
+}
+
 export default async function ClubsPage() {
   const clubs = await getClubs();
+  const clubIds = clubs.map((c) => c.id);
+  const [memberCounts, eventCounts] = await Promise.all([
+    getMemberCounts(clubIds),
+    getEventCounts(clubIds),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -39,11 +76,19 @@ export default async function ClubsPage() {
                 {club.name}
               </h3>
               {club.description && (
-                <p className="text-gray-600 text-sm line-clamp-2">
+                <p className="text-gray-600 text-sm line-clamp-2 mb-3">
                   {club.description}
                 </p>
               )}
-              <div className="mt-4 text-xs text-gray-400">
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-blue-600 font-medium">
+                  👥 {memberCounts[club.id] || 0}명
+                </span>
+                <span className="text-green-600 font-medium">
+                  📅 {eventCounts[club.id] || 0}개 모임
+                </span>
+              </div>
+              <div className="mt-3 text-xs text-gray-400">
                 생성일: {new Date(club.created_at).toLocaleDateString("ko-KR")}
               </div>
             </Link>
