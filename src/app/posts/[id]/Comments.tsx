@@ -50,7 +50,12 @@ export default function Comments({ postId }: CommentsProps) {
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
 
-      setComments((data || []) as Comment[]);
+      // users가 배열로 반환되는 경우 처리
+      const formattedComments = (data || []).map((c: any) => ({
+        ...c,
+        users: Array.isArray(c.users) ? c.users[0] : c.users
+      }));
+      setComments(formattedComments as Comment[]);
     }
 
     loadData();
@@ -89,7 +94,11 @@ export default function Comments({ postId }: CommentsProps) {
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
 
-      setComments((data || []) as Comment[]);
+      const commentsData = (data || []).map((c: any) => ({
+        ...c,
+        users: Array.isArray(c.users) ? c.users[0] : c.users
+      }));
+      setComments(commentsData as Comment[]);
     } catch (error: any) {
       console.error("Error adding comment:", error);
       alert(`댓글 작성에 실패했습니다: ${error.message || "알 수 없는 오류"}`);
@@ -133,7 +142,11 @@ export default function Comments({ postId }: CommentsProps) {
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
 
-      setComments((data || []) as Comment[]);
+      const commentsData = (data || []).map((c: any) => ({
+        ...c,
+        users: Array.isArray(c.users) ? c.users[0] : c.users
+      }));
+      setComments(commentsData as Comment[]);
     } catch (error: any) {
       console.error("Error editing comment:", error);
       alert(`댓글 수정에 실패했습니다: ${error.message || "알 수 없는 오류"}`);
@@ -171,7 +184,11 @@ export default function Comments({ postId }: CommentsProps) {
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
 
-      setComments((data || []) as Comment[]);
+      const commentsData = (data || []).map((c: any) => ({
+        ...c,
+        users: Array.isArray(c.users) ? c.users[0] : c.users
+      }));
+      setComments(commentsData as Comment[]);
     } catch (error: any) {
       console.error("Error deleting comment:", error);
       alert(`댓글 삭제에 실패했습니다: ${error.message || "알 수 없는 오류"}`);
