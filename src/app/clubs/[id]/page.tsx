@@ -133,6 +133,7 @@ export default async function ClubDetailPage({
               {members.map((member) => (
                 <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="font-medium text-gray-900">
+                    {member.role === "owner" && "👑 "}
                     {member.users?.nickname || member.users?.name || "사용자"}
                   </span>
                   <span className={`text-xs px-2 py-1 rounded ${
