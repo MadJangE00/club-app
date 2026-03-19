@@ -33,11 +33,13 @@ export default function Calendar({ events, clubId }: CalendarProps) {
   // 이전 월의 마지막 날들
   const prevMonthDays = new Date(year, month, 0).getDate();
   
-  // 모임이 있는 날짜 매핑
+  // 모임이 있는 날짜 매핑 (timezone 문제 해결)
   const eventsByDate: Record<string, Event[]> = {};
   events.forEach((event) => {
-    const date = new Date(event.event_date);
-    const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    // ISO 문자열에서 날짜 부분만 추출 (YYYY-MM-DD)
+    const dateStr = event.event_date.split('T')[0];
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const key = `${year}-${month - 1}-${day}`; // month는 0부터 시작
     if (!eventsByDate[key]) {
       eventsByDate[key] = [];
     }
