@@ -82,6 +82,7 @@ export default async function EventDetailPage({
           <div className="flex gap-2 items-center">
             <AttendButton 
               eventId={id} 
+              clubId={event.club_id}
               maxParticipants={event.max_participants}
               currentCount={attending.length}
             />

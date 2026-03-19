@@ -7,16 +7,18 @@ import type { User } from "@supabase/supabase-js";
 
 interface Props {
   eventId: string;
+  clubId: string;
   maxParticipants: number | null;
   currentCount: number;
 }
 
 type AttendanceStatus = "attending" | "maybe" | "not_attending";
 
-export default function AttendButton({ eventId, maxParticipants, currentCount }: Props) {
+export default function AttendButton({ eventId, clubId, maxParticipants, currentCount }: Props) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AttendanceStatus | null>(null);
+  const [isMember, setIsMember] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,6 +27,17 @@ export default function AttendButton({ eventId, maxParticipants, currentCount }:
       setUser(user);
 
       if (user) {
+        // 동호회 멤버인지 확인
+        const { data: membership } = await supabase
+          .from("club_members")
+          .select("id")
+          .eq("club_id", clubId)
+          .eq("user_id", user.id)
+          .single();
+
+        setIsMember(!!membership);
+
+        // 현재 출석 상태 확인
         const { data } = await supabase
           .from("attendance")
           .select("status")
@@ -41,7 +54,7 @@ export default function AttendButton({ eventId, maxParticipants, currentCount }:
     }
 
     checkAttendance();
-  }, [eventId]);
+  }, [eventId, clubId]);
 
   const handleAttend = async (newStatus: AttendanceStatus) => {
     if (!user) {
@@ -98,6 +111,14 @@ export default function AttendButton({ eventId, maxParticipants, currentCount }:
       >
         로그인하고 참가하기
       </button>
+    );
+  }
+
+  if (!isMember) {
+    return (
+      <div className="px-6 py-3 bg-gray-100 text-gray-600 rounded-lg font-medium">
+        🔒 동호회 멤버만 참가할 수 있습니다
+      </div>
     );
   }
 
