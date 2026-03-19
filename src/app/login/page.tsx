@@ -9,6 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -22,7 +23,16 @@ export default function LoginPage() {
     setMessage("");
 
     try {
-      if (isSignUp) {
+      if (isResetMode) {
+        // 비밀번호 재설정 이메일 전송
+        const { error } = await supabase.auth.resetPasswordForEmail(form.email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+
+        if (error) throw error;
+
+        setMessage("비밀번호 재설정 이메일을 전송했습니다. 이메일을 확인해주세요!");
+      } else if (isSignUp) {
         // 회원가입
         const { data, error } = await supabase.auth.signUp({
           email: form.email,
@@ -76,7 +86,7 @@ export default function LoginPage() {
     <div className="max-w-md mx-auto mt-12">
       <div className="bg-white rounded-xl shadow-lg p-8">
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">
-          {isSignUp ? "🔐 회원가입" : "🔓 로그인"}
+          {isResetMode ? "🔑 비밀번호 찾기" : isSignUp ? "🔐 회원가입" : "🔓 로그인"}
         </h2>
 
         <form onSubmit={handleAuth} className="space-y-5">
@@ -110,24 +120,26 @@ export default function LoginPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              비밀번호
-            </label>
-            <input
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-              placeholder="비밀번호를 입력하세요 (6자 이상)"
-              minLength={6}
-              required
-            />
-          </div>
+          {!isResetMode && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
+                비밀번호
+              </label>
+              <input
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                placeholder="비밀번호를 입력하세요 (6자 이상)"
+                minLength={6}
+                required
+              />
+            </div>
+          )}
 
           {message && (
             <div className={`p-3 rounded-lg text-sm ${
-              message.includes("완료") 
+              message.includes("완료") || message.includes("전송")
                 ? "bg-green-100 text-green-800" 
                 : "bg-red-100 text-red-800"
             }`}>
@@ -140,19 +152,32 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
-            {loading ? "처리 중..." : isSignUp ? "회원가입" : "로그인"}
+            {loading ? "처리 중..." : isResetMode ? "이메일 전송" : isSignUp ? "회원가입" : "로그인"}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 space-y-2 text-center">
+          {!isResetMode && !isSignUp && (
+            <button
+              onClick={() => {
+                setIsResetMode(true);
+                setMessage("");
+              }}
+              className="text-gray-600 hover:text-gray-800 text-sm block"
+            >
+              비밀번호를 잊으셨나요?
+            </button>
+          )}
+          
           <button
             onClick={() => {
-              setIsSignUp(!isSignUp);
+              setIsSignUp(isResetMode ? false : !isSignUp);
+              setIsResetMode(false);
               setMessage("");
             }}
             className="text-blue-600 hover:text-blue-800 font-medium"
           >
-            {isSignUp ? "이미 계정이 있으신가요? 로그인" : "계정이 없으신가요? 회원가입"}
+            {isResetMode ? "로그인으로 돌아가기" : isSignUp ? "이미 계정이 있으신가요? 로그인" : "계정이 없으신가요? 회원가입"}
           </button>
         </div>
       </div>

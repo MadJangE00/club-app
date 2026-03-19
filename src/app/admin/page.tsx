@@ -16,12 +16,11 @@ async function checkAdmin(userId: string) {
 }
 
 async function getStats() {
-  const [users, clubs, events, posts, photos, dailyAttendance, totalPoints] = await Promise.all([
+  const [users, clubs, events, posts, dailyAttendance, totalPoints] = await Promise.all([
     supabase.from("users").select("id", { count: "exact", head: true }),
     supabase.from("clubs").select("id", { count: "exact", head: true }),
     supabase.from("events").select("id", { count: "exact", head: true }),
     supabase.from("posts").select("id", { count: "exact", head: true }),
-    supabase.from("photo_posts").select("id", { count: "exact", head: true }),
     // 오늘 출석한 사람 수
     supabase.from("daily_attendance").select("user_id", { count: "exact", head: true })
       .eq("attended_at", new Date().toISOString().split('T')[0]),
@@ -36,7 +35,6 @@ async function getStats() {
     clubs: clubs.count || 0,
     events: events.count || 0,
     posts: posts.count || 0,
-    photos: photos.count || 0,
     todayAttendance: dailyAttendance.count || 0,
     totalPoints: pointsSum,
   };
@@ -96,10 +94,6 @@ export default async function AdminPage() {
           <div className="text-gray-700 font-medium mt-1">게시글</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6 text-center">
-          <div className="text-3xl font-bold text-pink-600">{stats.photos}</div>
-          <div className="text-gray-700 font-medium mt-1">사진</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6 text-center">
           <div className="text-3xl font-bold text-yellow-600">{stats.totalPoints}</div>
           <div className="text-gray-700 font-medium mt-1">총 포인트</div>
         </div>
@@ -118,7 +112,7 @@ export default async function AdminPage() {
       {/* 빠른 관리 */}
       <div className="bg-white rounded-xl shadow p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">⚡ 빠른 관리</h2>
-        <div className="grid md:grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-3 gap-4">
           <Link
             href="/admin/users"
             className="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors text-center"
@@ -139,13 +133,6 @@ export default async function AdminPage() {
           >
             <div className="text-2xl mb-2">📝</div>
             <div className="font-bold text-gray-800">게시글 관리</div>
-          </Link>
-          <Link
-            href="/admin/photos"
-            className="p-4 border-2 border-gray-300 rounded-lg hover:border-pink-400 hover:bg-pink-50 transition-colors text-center"
-          >
-            <div className="text-2xl mb-2">📷</div>
-            <div className="font-bold text-gray-800">사진 관리</div>
           </Link>
         </div>
       </div>
