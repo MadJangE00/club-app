@@ -72,27 +72,40 @@ export default function ClubActions({ clubId, ownerId }: ClubActionsProps) {
         .update({ owner_id: selectedMember })
         .eq("id", clubId);
 
-      if (clubError) throw clubError;
+      if (clubError) {
+        console.error("Club update error:", clubError);
+        throw clubError;
+      }
 
       // 새 소유자의 role을 owner로 변경
-      await supabase
+      const { error: newOwnerError } = await supabase
         .from("club_members")
         .update({ role: "owner" })
         .eq("club_id", clubId)
         .eq("user_id", selectedMember);
 
+      if (newOwnerError) {
+        console.error("New owner update error:", newOwnerError);
+        throw newOwnerError;
+      }
+
       // 기존 소유자의 role을 member로 변경
-      await supabase
+      const { error: oldOwnerError } = await supabase
         .from("club_members")
         .update({ role: "member" })
         .eq("club_id", clubId)
         .eq("user_id", ownerId);
 
+      if (oldOwnerError) {
+        console.error("Old owner update error:", oldOwnerError);
+        throw oldOwnerError;
+      }
+
       setShowTransferModal(false);
       router.refresh();
     } catch (error: any) {
       console.error("Error transferring ownership:", error);
-      alert(`위임에 실패했습니다: ${error.message || "알 수 없는 오류"}`);
+      alert(`위임에 실패했습니다: ${error?.message || JSON.stringify(error) || "알 수 없는 오류"}`);
     } finally {
       setLoading(false);
     }
