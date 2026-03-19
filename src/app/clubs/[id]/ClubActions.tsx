@@ -15,7 +15,7 @@ interface Member {
   users: {
     name: string;
     nickname: string;
-  };
+  } | null;
 }
 
 export default function ClubActions({ clubId, ownerId }: ClubActionsProps) {
@@ -39,15 +39,25 @@ export default function ClubActions({ clubId, ownerId }: ClubActionsProps) {
       .from("club_members")
       .select(`
         user_id,
-        users (name, nickname)
+        joined_at,
+        users (
+          name,
+          nickname
+        )
       `)
       .eq("club_id", clubId)
       .neq("user_id", ownerId)
       .order("joined_at", { ascending: true });
     
-    setMembers((data || []) as Member[]);
-    if (data && data.length > 0) {
-      setSelectedMember(data[0].user_id);
+    if (data) {
+      const memberList = data.map((m: any) => ({
+        user_id: m.user_id,
+        users: Array.isArray(m.users) ? m.users[0] : m.users
+      }));
+      setMembers(memberList);
+      if (memberList.length > 0) {
+        setSelectedMember(memberList[0].user_id);
+      }
     }
   };
 
