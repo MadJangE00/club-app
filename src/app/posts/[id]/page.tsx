@@ -2,6 +2,8 @@ import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import PostActions from "./PostActions";
+import LikeButton from "./LikeButton";
+import Comments from "./Comments";
 
 // ISR: 30초마다 재생성
 export const revalidate = 30;
@@ -95,7 +97,15 @@ export default async function PostDetailPage({
         <div className="prose max-w-none text-gray-800 whitespace-pre-wrap">
           {post.content}
         </div>
+        
+        {/* 좋아요 버튼 */}
+        <div className="mt-6 pt-6 border-t">
+          <LikeButton postId={post.id} />
+        </div>
       </div>
+
+      {/* 댓글 */}
+      <Comments postId={post.id} />
 
       {/* 뒤로가기 */}
       <div className="text-center">
