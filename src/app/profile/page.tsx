@@ -10,10 +10,13 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [attendance, setAttendance] = useState<any[]>([]);
+  const [dailyAttendance, setDailyAttendance] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalAttendance: 0,
     attendingCount: 0,
     maybeCount: 0,
+    consecutiveDays: 0,
+    todayChecked: false,
   });
   const [loading, setLoading] = useState(true);
 
@@ -75,7 +78,52 @@ export default function ProfilePage() {
           totalAttendance: attendanceData.length,
           attendingCount: attendanceData.filter((a: any) => a.status === "attending").length,
           maybeCount: attendanceData.filter((a: any) => a.status === "maybe").length,
+          consecutiveDays: 0,
+          todayChecked: false,
         });
+      }
+
+      // 일일 출석 현황 가져오기
+      const { data: dailyData } = await supabase
+        .from("daily_attendance")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("attended_at", { ascending: false })
+        .limit(30);
+
+      if (dailyData) {
+        setDailyAttendance(dailyData as any[]);
+        
+        // 오늘 출석 확인
+        const now = new Date();
+        const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+        const today = koreaTime.toISOString().split('T')[0];
+        const todayCheck = dailyData.some((d: any) => d.attended_at === today);
+        
+        // 연속 출석일 계산
+        let consecutive = 0;
+        const todayDate = new Date();
+        todayDate.setHours(0, 0, 0, 0);
+        
+        for (let i = 0; i < dailyData.length; i++) {
+          const [year, month, day] = dailyData[i].attended_at.split('-').map(Number);
+          const checkDate = new Date(year, month - 1, day);
+          
+          const expectedDate = new Date(todayDate);
+          expectedDate.setDate(todayDate.getDate() - i);
+          
+          if (checkDate.getTime() === expectedDate.getTime()) {
+            consecutive++;
+          } else {
+            break;
+          }
+        }
+        
+        setStats(prev => ({
+          ...prev,
+          consecutiveDays: consecutive,
+          todayChecked: todayCheck,
+        }));
       }
 
       setLoading(false);
@@ -134,19 +182,19 @@ export default function ProfilePage() {
             <div className="text-gray-600 text-sm">포인트</div>
           </div>
           <div className="text-center">
+            <div className="text-3xl font-bold text-purple-500">🔥</div>
+            <div className="text-2xl font-bold text-gray-900 mt-1">{stats.consecutiveDays}</div>
+            <div className="text-gray-600 text-sm">연속 출석</div>
+          </div>
+          <div className="text-center">
             <div className="text-3xl font-bold text-blue-500">📋</div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">{stats.totalAttendance}</div>
-            <div className="text-gray-600 text-sm">전체 출석</div>
+            <div className="text-2xl font-bold text-gray-900 mt-1">{dailyAttendance.length}</div>
+            <div className="text-gray-600 text-sm">총 출석일</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-green-500">✅</div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">{stats.attendingCount}</div>
-            <div className="text-gray-600 text-sm">참석 확정</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-orange-500">🤔</div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">{stats.maybeCount}</div>
-            <div className="text-gray-600 text-sm">참석 고민중</div>
+            <div className="text-3xl">{stats.todayChecked ? "✅" : "⏰"}</div>
+            <div className="text-lg font-bold text-gray-900 mt-1">{stats.todayChecked ? "완료" : "미완료"}</div>
+            <div className="text-gray-600 text-sm">오늘 출석</div>
           </div>
         </div>
       </div>
@@ -163,7 +211,47 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* 출석 현황 */}
+      {/* 일일 출석 현황 */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">📅 일일 출석 현황</h3>
+        
+        {dailyAttendance.length > 0 ? (
+          <div>
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {Array.from({ length: 28 }).map((_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (27 - i));
+                const dateStr = date.toISOString().split('T')[0];
+                const attended = dailyAttendance.some((d: any) => d.attended_at === dateStr);
+                
+                return (
+                  <div
+                    key={i}
+                    className={`aspect-square rounded-sm flex items-center justify-center text-xs ${
+                      attended
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-100 text-gray-400"
+                    }`}
+                    title={`${date.toLocaleDateString("ko-KR")} ${attended ? "출석" : "미출석"}`}
+                  >
+                    {date.getDate()}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <span>🔥 연속 {stats.consecutiveDays}일 출석 중!</span>
+              <span>총 {dailyAttendance.length}일 출석</span>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-600">
+            아직 출석 기록이 없습니다. 매일 출석하고 포인트를 모아보세요!
+          </div>
+        )}
+      </div>
+
+      {/* 모임 출석 현황 */}
       <div className="bg-white rounded-xl shadow p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">📝 출석 현황</h3>
         

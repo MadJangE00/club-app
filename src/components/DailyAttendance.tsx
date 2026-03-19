@@ -146,19 +146,26 @@ export default function DailyAttendance() {
   };
 
   if (data.loading) {
-    return (
-      <div className="bg-white rounded-xl shadow p-6">
-        <div className="text-center text-gray-500">로딩 중...</div>
-      </div>
-    );
+    return null;
   }
 
   if (!user) {
+    return null;
+  }
+
+  // 출석 완료 시 작게 표시
+  if (data.todayChecked) {
     return (
-      <div className="bg-white rounded-xl shadow p-6">
-        <p className="text-center text-gray-600">
-          로그인하면 출석 체크를 할 수 있어요!
-        </p>
+      <div className="bg-green-100 rounded-lg p-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">✅</span>
+          <span className="text-green-800 font-medium">오늘 출석 완료!</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-green-700">
+          <span>🔥 {data.consecutiveDays}일 연속</span>
+          <span>•</span>
+          <span>⭐ {data.totalPoints || 0}P</span>
+        </div>
       </div>
     );
   }
@@ -185,20 +192,13 @@ export default function DailyAttendance() {
           </div>
         </div>
 
-        {data.todayChecked ? (
-          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
-            <span className="text-2xl">✅</span>
-            <span className="font-bold">오늘 출석 완료!</span>
-          </div>
-        ) : (
-          <button
-            onClick={handleCheckIn}
-            disabled={checking}
-            className="px-6 py-3 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {checking ? "처리 중..." : "🎯 출석하기"}
-          </button>
-        )}
+        <button
+          onClick={handleCheckIn}
+          disabled={checking}
+          className="px-6 py-3 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {checking ? "처리 중..." : "🎯 출석하기"}
+        </button>
       </div>
     </div>
   );
