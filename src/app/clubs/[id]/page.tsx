@@ -118,9 +118,6 @@ export default async function ClubDetailPage({
         </div>
       </div>
 
-      {/* 캘린더 */}
-      <Calendar events={events} clubId={id} />
-
       <div className="grid lg:grid-cols-2 gap-6">
         {/* 멤버 목록 */}
         <div className="bg-white rounded-xl shadow p-6">
@@ -181,6 +178,9 @@ export default async function ClubDetailPage({
           )}
         </div>
       </div>
+
+      {/* 캘린더 */}
+      <Calendar events={events} clubId={id} />
     </div>
   );
 }

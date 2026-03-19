@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import DailyAttendance from "@/components/DailyAttendance";
 
 // ISR: 60초마다 재생성 (캐싱)
 export const revalidate = 60;
@@ -53,6 +54,9 @@ export default async function Home() {
           동호회를 만들고, 모임을 열고, 함께 성장하세요
         </p>
       </div>
+
+      {/* 출석 체크 */}
+      <DailyAttendance />
 
       {/* 통계 카드 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
