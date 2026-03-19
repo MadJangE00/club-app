@@ -1,9 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
-// 캐싱 비활성화
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// ISR: 60초마다 재생성 (캐싱)
+export const revalidate = 60;
 
 async function getPhotos() {
   // 모든 동호회의 사진을 가져오고, 투표 수도 함께 조회

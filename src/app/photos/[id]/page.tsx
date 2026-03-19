@@ -4,9 +4,8 @@ import Link from "next/link";
 import VoteButton from "./VoteButton";
 import PhotoActions from "./PhotoActions";
 
-// 캐싱 비활성화
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// ISR: 30초마다 재생성
+export const revalidate = 30;
 
 async function getPhoto(id: string) {
   const { data, error } = await supabase

@@ -4,9 +4,8 @@ import JoinButton from "./JoinButton";
 import ClubActions from "./ClubActions";
 import Link from "next/link";
 
-// 캐싱 비활성화 - 실시간 데이터 반영
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// ISR: 30초마다 재생성
+export const revalidate = 30;
 
 async function getClub(id: string) {
   const { data, error } = await supabase

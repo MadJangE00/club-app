@@ -4,9 +4,8 @@ import Link from "next/link";
 import AttendButton from "./AttendButton";
 import EventActions from "./EventActions";
 
-// 캐싱 비활성화 - 실시간 데이터 반영
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// ISR: 30초마다 재생성
+export const revalidate = 30;
 
 async function getEvent(id: string) {
   const { data } = await supabase
