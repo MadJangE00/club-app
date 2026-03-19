@@ -32,7 +32,10 @@ export default function DailyAttendance() {
       }
       setUser(user);
 
-      const today = new Date().toISOString().split("T")[0];
+      // 한국 시간대로 오늘 날짜 계산
+      const now = new Date();
+      const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
+      const today = koreaTime.toISOString().split('T')[0];
 
       // 오늘 출석했는지 확인
       const { data: todayAttendance } = await supabase
@@ -61,13 +64,16 @@ export default function DailyAttendance() {
       if (recentAttendance && recentAttendance.length > 0) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        // 한국 시간 보정
+        const koreaToday = new Date(today.getTime() + (9 * 60 * 60 * 1000));
         
         for (let i = 0; i < recentAttendance.length; i++) {
-          const checkDate = new Date(recentAttendance[i].attended_at);
-          checkDate.setHours(0, 0, 0, 0);
+          // 날짜 문자열을 직접 파싱 (YYYY-MM-DD)
+          const [year, month, day] = recentAttendance[i].attended_at.split('-').map(Number);
+          const checkDate = new Date(year, month - 1, day);
           
-          const expectedDate = new Date(today);
-          expectedDate.setDate(today.getDate() - i);
+          const expectedDate = new Date(koreaToday);
+          expectedDate.setDate(koreaToday.getDate() - i);
           
           if (checkDate.getTime() === expectedDate.getTime()) {
             consecutiveDays++;
@@ -93,7 +99,10 @@ export default function DailyAttendance() {
 
     setChecking(true);
     try {
-      const today = new Date().toISOString().split("T")[0];
+      // 한국 시간대로 오늘 날짜 계산
+      const now = new Date();
+      const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+      const today = koreaTime.toISOString().split('T')[0];
 
       // 출석 기록
       const { error: attendanceError } = await supabase
