@@ -83,6 +83,7 @@ export default async function EventDetailPage({
             <AttendButton 
               eventId={id} 
               clubId={event.club_id}
+              eventDate={event.event_date}
               maxParticipants={event.max_participants}
               currentCount={attending.length}
             />

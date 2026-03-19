@@ -8,18 +8,20 @@ import type { User } from "@supabase/supabase-js";
 interface Props {
   eventId: string;
   clubId: string;
+  eventDate: string;
   maxParticipants: number | null;
   currentCount: number;
 }
 
 type AttendanceStatus = "attending" | "maybe" | "not_attending";
 
-export default function AttendButton({ eventId, clubId, maxParticipants, currentCount }: Props) {
+export default function AttendButton({ eventId, clubId, eventDate, maxParticipants, currentCount }: Props) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AttendanceStatus | null>(null);
   const [isMember, setIsMember] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     async function checkAttendance() {
@@ -97,6 +99,19 @@ export default function AttendButton({ eventId, clubId, maxParticipants, current
     }
   };
 
+  const handleConfirm = () => {
+    setConfirming(true);
+    // 동호회 상세 페이지로 이동
+    setTimeout(() => {
+      router.push(`/clubs/${clubId}`);
+    }, 500);
+  };
+
+  // 모임 날짜 확인
+  const now = new Date();
+  const eventDateTime = new Date(eventDate);
+  const isEventPast = eventDateTime < now;
+
   if (loading) {
     return (
       <div className="text-gray-500 text-sm">로딩중...</div>
@@ -122,43 +137,73 @@ export default function AttendButton({ eventId, clubId, maxParticipants, current
     );
   }
 
+  // 모임이 끝난 경우
+  if (isEventPast) {
+    return (
+      <div className="space-y-3">
+        <div className="px-6 py-3 bg-gray-100 text-gray-600 rounded-lg font-medium">
+          ⏰ 모임이 종료되었습니다
+        </div>
+        <button
+          onClick={handleConfirm}
+          disabled={confirming}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors disabled:opacity-50"
+        >
+          {confirming ? "이동 중..." : "✅ 확인"}
+        </button>
+      </div>
+    );
+  }
+
   const isFull = maxParticipants && currentCount >= maxParticipants;
 
   return (
-    <div className="flex gap-2">
-      <button
-        onClick={() => handleAttend("attending")}
-        disabled={!!isFull && status !== "attending"}
-        className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-          status === "attending"
-            ? "bg-green-600 text-white ring-2 ring-green-300"
-            : isFull
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-green-600 text-white hover:bg-green-700"
-        }`}
-      >
-        {isFull && status !== "attending" ? "정원 초과" : status === "attending" ? "✅ 참석중" : "참석하기"}
-      </button>
-      <button
-        onClick={() => handleAttend("maybe")}
-        className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-          status === "maybe"
-            ? "bg-yellow-500 text-white ring-2 ring-yellow-300"
-            : "bg-yellow-500 text-white hover:bg-yellow-600"
-        }`}
-      >
-        {status === "maybe" ? "🤔 고민중" : "고민중"}
-      </button>
-      <button
-        onClick={() => handleAttend("not_attending")}
-        className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-          status === "not_attending"
-            ? "bg-red-500 text-white ring-2 ring-red-300"
-            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-        }`}
-      >
-        {status === "not_attending" ? "❌ 불참" : "불참"}
-      </button>
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <button
+          onClick={() => handleAttend("attending")}
+          disabled={!!isFull && status !== "attending"}
+          className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-colors ${
+            status === "attending"
+              ? "bg-green-600 text-white ring-2 ring-green-300"
+              : isFull
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-green-100 text-green-700 hover:bg-green-200"
+          }`}
+        >
+          {status === "attending" ? "✅ 참석" : "참석"}
+        </button>
+        <button
+          onClick={() => handleAttend("maybe")}
+          className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-colors ${
+            status === "maybe"
+              ? "bg-yellow-500 text-white ring-2 ring-yellow-300"
+              : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+          }`}
+        >
+          {status === "maybe" ? "🤔 고민중" : "고민중"}
+        </button>
+        <button
+          onClick={() => handleAttend("not_attending")}
+          className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-colors ${
+            status === "not_attending"
+              ? "bg-red-500 text-white ring-2 ring-red-300"
+              : "bg-red-100 text-red-700 hover:bg-red-200"
+          }`}
+        >
+          {status === "not_attending" ? "❌ 불참" : "불참"}
+        </button>
+      </div>
+      
+      {status && (
+        <button
+          onClick={handleConfirm}
+          disabled={confirming}
+          className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors disabled:opacity-50"
+        >
+          {confirming ? "이동 중..." : "✅ 확인"}
+        </button>
+      )}
     </div>
   );
 }
