@@ -8,6 +8,8 @@ import type { User } from "@supabase/supabase-js";
 interface ClubActionsProps {
   clubId: string;
   ownerId: string;
+  clubName: string;
+  clubDescription: string;
 }
 
 interface Member {
@@ -18,15 +20,20 @@ interface Member {
   } | null;
 }
 
-export default function ClubActions({ clubId, ownerId }: ClubActionsProps) {
+export default function ClubActions({ clubId, ownerId, clubName, clubDescription }: ClubActionsProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedMember, setSelectedMember] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: clubName,
+    description: clubDescription,
+  });
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -134,6 +141,31 @@ export default function ClubActions({ clubId, ownerId }: ClubActionsProps) {
     }
   };
 
+  const handleEdit = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("clubs")
+        .update({
+          name: editForm.name,
+          description: editForm.description,
+        })
+        .eq("id", clubId);
+
+      if (error) throw error;
+
+      setShowEditModal(false);
+      router.refresh();
+    } catch (error: any) {
+      console.error("Error updating club:", error);
+      alert(`수정에 실패했습니다: ${error.message || "알 수 없는 오류"}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 소유자가 아니면 아무것도 표시하지 않음
   if (!user || user.id !== ownerId) {
     return null;
@@ -141,10 +173,17 @@ export default function ClubActions({ clubId, ownerId }: ClubActionsProps) {
 
   return (
     <>
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center flex-wrap">
         <span className="px-3 py-1.5 text-sm bg-yellow-100 text-yellow-800 rounded-lg font-medium">
           👑 동호회장
         </span>
+        
+        <button
+          onClick={() => setShowEditModal(true)}
+          className="px-3 py-1.5 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium"
+        >
+          수정
+        </button>
         
         <button
           onClick={() => {
@@ -182,6 +221,63 @@ export default function ClubActions({ clubId, ownerId }: ClubActionsProps) {
           </div>
         )}
       </div>
+
+      {/* 동호회 수정 모달 */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">✏️ 동호회 수정</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  동호회 이름
+                </label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                  placeholder="동호회 이름"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  설명
+                </label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                  placeholder="동호회 설명"
+                  rows={4}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={handleEdit}
+                disabled={loading || !editForm.name.trim()}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50"
+              >
+                {loading ? "저장 중..." : "저장"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditForm({ name: clubName, description: clubDescription });
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 회장 위임 모달 */}
       {showTransferModal && (

@@ -103,7 +103,12 @@ export default async function ClubDetailPage({
           </div>
           <div className="flex gap-2 items-center">
             <JoinButton clubId={id} />
-            <ClubActions clubId={id} ownerId={club.owner_id} />
+            <ClubActions 
+              clubId={id} 
+              ownerId={club.owner_id}
+              clubName={club.name}
+              clubDescription={club.description || ""}
+            />
           </div>
         </div>
       </div>
