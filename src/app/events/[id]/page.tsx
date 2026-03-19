@@ -3,6 +3,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import AttendButton from "./AttendButton";
 
+// 캐싱 비활성화 - 실시간 데이터 반영
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 async function getEvent(id: string) {
   const { data } = await supabase
     .from("events")

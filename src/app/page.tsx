@@ -1,5 +1,9 @@
 import { supabase } from "@/lib/supabase";
 
+// 캐싱 비활성화 - 실시간 데이터 반영
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 async function getStats() {
   try {
     const [usersCount, clubsCount, eventsCount, postsCount] = await Promise.all([
