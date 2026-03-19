@@ -16,13 +16,20 @@ async function checkAdmin(userId: string) {
 }
 
 async function getStats() {
-  const [users, clubs, events, posts, photos] = await Promise.all([
+  const [users, clubs, events, posts, photos, dailyAttendance, totalPoints] = await Promise.all([
     supabase.from("users").select("id", { count: "exact", head: true }),
     supabase.from("clubs").select("id", { count: "exact", head: true }),
     supabase.from("events").select("id", { count: "exact", head: true }),
     supabase.from("posts").select("id", { count: "exact", head: true }),
     supabase.from("photo_posts").select("id", { count: "exact", head: true }),
+    // 오늘 출석한 사람 수
+    supabase.from("daily_attendance").select("user_id", { count: "exact", head: true })
+      .eq("attended_at", new Date().toISOString().split('T')[0]),
+    // 전체 포인트 합계
+    supabase.from("users").select("points"),
   ]);
+
+  const pointsSum = totalPoints.data?.reduce((sum: number, u: any) => sum + (u.points || 0), 0) || 0;
 
   return {
     users: users.count || 0,
@@ -30,6 +37,8 @@ async function getStats() {
     events: events.count || 0,
     posts: posts.count || 0,
     photos: photos.count || 0,
+    todayAttendance: dailyAttendance.count || 0,
+    totalPoints: pointsSum,
   };
 }
 
@@ -69,7 +78,7 @@ export default async function AdminPage() {
       </div>
 
       {/* 통계 */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow p-6 text-center">
           <div className="text-3xl font-bold text-blue-600">{stats.users}</div>
           <div className="text-gray-700 font-medium mt-1">사용자</div>
@@ -89,6 +98,20 @@ export default async function AdminPage() {
         <div className="bg-white rounded-lg shadow p-6 text-center">
           <div className="text-3xl font-bold text-pink-600">{stats.photos}</div>
           <div className="text-gray-700 font-medium mt-1">사진</div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className="text-3xl font-bold text-yellow-600">{stats.totalPoints}</div>
+          <div className="text-gray-700 font-medium mt-1">총 포인트</div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className="text-3xl font-bold text-teal-600">{stats.todayAttendance}</div>
+          <div className="text-gray-700 font-medium mt-1">오늘 출석</div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className="text-3xl font-bold text-emerald-600">
+            {stats.users > 0 ? Math.round((stats.todayAttendance / stats.users) * 100) : 0}%
+          </div>
+          <div className="text-gray-700 font-medium mt-1">출석률</div>
         </div>
       </div>
 
