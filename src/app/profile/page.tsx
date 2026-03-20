@@ -12,6 +12,7 @@ export default function ProfilePage() {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [dailyAttendance, setDailyAttendance] = useState<any[]>([]);
   const [purchasedImages, setPurchasedImages] = useState<any[]>([]);
+  const [myImages, setMyImages] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalAttendance: 0,
     attendingCount: 0,
@@ -136,6 +137,17 @@ export default function ProfilePage() {
 
       if (imageData) {
         setPurchasedImages(imageData as any[]);
+      }
+
+      // 내가 만든 작품 가져오기
+      const { data: myImageData } = await supabase
+        .from("images")
+        .select("*")
+        .eq("creator_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (myImageData) {
+        setMyImages(myImageData as any[]);
       }
 
       setLoading(false);
@@ -307,12 +319,64 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Pixel Market 갤러리 */}
+      {/* Pixel Market - 내 작품 */}
       <div className="bg-white rounded-xl shadow p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">🎨 내 갤러리</h3>
+          <h3 className="text-lg font-bold text-gray-900">🎨 내 작품 ({myImages.length})</h3>
           <a
-            href="https://pixel-market-omega.vercel.app/market"
+            href="https://pixel-market-rosy.vercel.app/my-gallery"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+          >
+            갤러리 관리 →
+          </a>
+        </div>
+        
+        {myImages.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {myImages.slice(0, 8).map((image: any) => (
+              <div
+                key={image.id}
+                className="relative aspect-square rounded-lg overflow-hidden bg-gray-100"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={image.image_url}
+                  alt={image.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 right-2 px-2 py-1 rounded text-xs font-semibold text-white
+                  ${image.is_for_sale ? 'bg-purple-600' : 'bg-gray-600'}">
+                  {image.is_for_sale ? `${image.price}P` : '보관중'}
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                  <p className="font-medium text-sm text-white truncate">{image.title}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-600">
+            <p className="mb-2">아직 등록한 작품이 없습니다</p>
+            <a
+              href="https://pixel-market-rosy.vercel.app/sell"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-600 hover:text-purple-700 text-sm"
+            >
+              작품 등록하기 →
+            </a>
+          </div>
+        )}
+      </div>
+
+      {/* Pixel Market - 구매한 작품 */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-900">🖼️ 구매한 작품 ({purchasedImages.length})</h3>
+          <a
+            href="https://pixel-market-rosy.vercel.app/market"
             target="_blank"
             rel="noopener noreferrer"
             className="text-purple-600 hover:text-purple-700 text-sm font-medium"
@@ -324,28 +388,23 @@ export default function ProfilePage() {
         {purchasedImages.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {purchasedImages.map((image: any) => (
-              <a
+              <div
                 key={image.id}
-                href={`https://pixel-market-omega.vercel.app/market/${image.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative aspect-square rounded-lg overflow-hidden bg-gray-100"
+                className="relative aspect-square rounded-lg overflow-hidden bg-gray-100"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={image.image_url}
                   alt={image.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition"
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition">
-                  <div className="absolute bottom-0 left-0 right-0 p-2 text-white">
-                    <p className="font-medium text-sm truncate">{image.title}</p>
-                    <p className="text-xs text-gray-300">
-                      by {image.creator?.nickname || image.creator?.name || "익명"}
-                    </p>
-                  </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                  <p className="font-medium text-sm text-white truncate">{image.title}</p>
+                  <p className="text-xs text-gray-300">
+                    by {image.creator?.nickname || image.creator?.name || "익명"}
+                  </p>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         ) : (
