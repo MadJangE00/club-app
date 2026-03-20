@@ -11,6 +11,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [attendance, setAttendance] = useState<any[]>([]);
   const [dailyAttendance, setDailyAttendance] = useState<any[]>([]);
+  const [purchasedImages, setPurchasedImages] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalAttendance: 0,
     attendingCount: 0,
@@ -124,6 +125,17 @@ export default function ProfilePage() {
           consecutiveDays: consecutive,
           todayChecked: todayCheck,
         }));
+      }
+
+      // Pixel Market에서 구매한 이미지 가져오기
+      const { data: imageData } = await supabase
+        .from("images")
+        .select("*, creator:users!images_creator_id_fkey(*)")
+        .eq("owner_id", user.id)
+        .order("sold_at", { ascending: false });
+
+      if (imageData) {
+        setPurchasedImages(imageData as any[]);
       }
 
       setLoading(false);
@@ -291,6 +303,62 @@ export default function ProfilePage() {
         ) : (
           <div className="text-center py-8 text-gray-600">
             아직 출석 기록이 없습니다. 모임에 참여해보세요!
+          </div>
+        )}
+      </div>
+
+      {/* Pixel Market 갤러리 */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-900">🎨 내 갤러리</h3>
+          <a
+            href="https://pixel-market-omega.vercel.app/market"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+          >
+            마켓 바로가기 →
+          </a>
+        </div>
+        
+        {purchasedImages.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {purchasedImages.map((image: any) => (
+              <a
+                key={image.id}
+                href={`https://pixel-market-omega.vercel.app/market/${image.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative aspect-square rounded-lg overflow-hidden bg-gray-100"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={image.image_url}
+                  alt={image.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition">
+                  <div className="absolute bottom-0 left-0 right-0 p-2 text-white">
+                    <p className="font-medium text-sm truncate">{image.title}</p>
+                    <p className="text-xs text-gray-300">
+                      by {image.creator?.nickname || image.creator?.name || "익명"}
+                    </p>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-600">
+            <p className="mb-2">아직 구매한 작품이 없습니다</p>
+            <a
+              href="https://pixel-market-omega.vercel.app/market"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-600 hover:text-purple-700 text-sm"
+            >
+              Pixel Market에서 작품 구경하기 →
+            </a>
           </div>
         )}
       </div>
