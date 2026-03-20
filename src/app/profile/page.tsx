@@ -352,7 +352,7 @@ export default function ProfilePage() {
           <div className="text-center py-8 text-gray-600">
             <p className="mb-2">아직 구매한 작품이 없습니다</p>
             <a
-              href="https://pixel-market-omega.vercel.app/market"
+              href="https://pixel-market-rosy.vercel.app/market"
               target="_blank"
               rel="noopener noreferrer"
               className="text-purple-600 hover:text-purple-700 text-sm"
