@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import SettingsClient from "./SettingsClient";
 
 // 캐싱 비활성화
 export const dynamic = "force-dynamic";
@@ -136,6 +137,9 @@ export default async function AdminPage() {
           </Link>
         </div>
       </div>
+
+      {/* 서비스 설정 */}
+      <SettingsClient />
 
       {/* 최근 사용자 */}
       <div className="bg-white rounded-xl shadow p-6">
