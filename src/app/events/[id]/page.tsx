@@ -61,6 +61,7 @@ export default async function EventDetailPage({
   const attending = attendance.filter((a) => a.status === "attending");
   const maybe = attendance.filter((a) => a.status === "maybe");
   const notAttending = attendance.filter((a) => a.status === "not_attending");
+  const isEventPast = new Date(event.event_date) < new Date();
 
   return (
     <div className="space-y-6">
@@ -80,15 +81,23 @@ export default async function EventDetailPage({
             )}
           </div>
           <div className="flex gap-2 items-center">
-            <AttendButton 
-              eventId={id} 
+            {isEventPast && (
+              <Link
+                href={`/events/${id}/report`}
+                className="px-4 py-2 bg-gray-700 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                📋 레포트
+              </Link>
+            )}
+            <AttendButton
+              eventId={id}
               clubId={event.club_id}
               eventDate={event.event_date}
               maxParticipants={event.max_participants}
               currentCount={attending.length}
             />
-            <EventActions 
-              eventId={id} 
+            <EventActions
+              eventId={id}
               createdBy={event.created_by}
               clubId={event.club_id}
             />
