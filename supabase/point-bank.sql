@@ -86,6 +86,34 @@ END;
 $$;
 
 -- ============================================
+-- 관리자 은행 초기화 RPC (상금 풀 미변경)
+-- ============================================
+CREATE OR REPLACE FUNCTION init_bank()
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_member_count INTEGER;
+  v_new_bank INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO v_member_count FROM users;
+  v_new_bank := v_member_count * 10;
+
+  UPDATE point_bank
+  SET balance = v_new_bank,
+      last_reset_date = (NOW() AT TIME ZONE 'Asia/Seoul')::DATE
+  WHERE id = 1;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'new_bank_balance', v_new_bank,
+    'member_count', v_member_count
+  );
+END;
+$$;
+
+-- ============================================
 -- 자정 리셋 RPC
 -- ============================================
 CREATE OR REPLACE FUNCTION midnight_reset()

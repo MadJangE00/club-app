@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import SettingsClient from "./SettingsClient";
+import BankPanel from "./BankPanel";
 
 // 캐싱 비활성화
 export const dynamic = "force-dynamic";
@@ -137,6 +138,9 @@ export default async function AdminPage() {
           </Link>
         </div>
       </div>
+
+      {/* 포인트 은행 관리 */}
+      <BankPanel />
 
       {/* 서비스 설정 */}
       <SettingsClient />
