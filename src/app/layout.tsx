@@ -53,6 +53,7 @@ export default function RootLayout({
               <a href="/clubs" className="text-gray-700 hover:text-black">동호회</a>
               <a href="/events" className="text-gray-700 hover:text-black">모임</a>
               <a href="/posts" className="text-gray-700 hover:text-black">게시판</a>
+              <a href="/lottery" className="text-gray-700 hover:text-black">복권</a>
               <AdminLink />
               <AuthButton />
             </div>
@@ -69,6 +70,7 @@ export default function RootLayout({
             <a href="/clubs" className="text-gray-700 hover:text-black">동호회</a>
             <a href="/events" className="text-gray-700 hover:text-black">모임</a>
             <a href="/posts" className="text-gray-700 hover:text-black">게시판</a>
+            <a href="/lottery" className="text-gray-700 hover:text-black">복권</a>
             <AdminLink />
           </div>
         </nav>

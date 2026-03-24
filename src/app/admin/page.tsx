@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import SettingsClient from "./SettingsClient";
 import BankPanel from "./BankPanel";
+import LotteryPanel from "./LotteryPanel";
 
 // 캐싱 비활성화
 export const dynamic = "force-dynamic";
@@ -141,6 +142,9 @@ export default async function AdminPage() {
 
       {/* 포인트 은행 관리 */}
       <BankPanel />
+
+      {/* 복권 관리 */}
+      <LotteryPanel />
 
       {/* 서비스 설정 */}
       <SettingsClient />
