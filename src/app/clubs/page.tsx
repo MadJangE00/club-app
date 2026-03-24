@@ -87,6 +87,9 @@ export default async function ClubsPage() {
                 <span className="text-green-600 font-medium">
                   📅 {eventCounts[club.id] || 0}개 모임
                 </span>
+                <span className="text-amber-600 font-medium">
+                  🪙 {club.point_basket ?? 0}P
+                </span>
               </div>
               <div className="mt-3 text-xs text-gray-400">
                 생성일: {new Date(club.created_at).toLocaleDateString("ko-KR")}

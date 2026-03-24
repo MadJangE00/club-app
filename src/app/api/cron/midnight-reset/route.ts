@@ -12,12 +12,22 @@ export async function GET(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { data, error } = await supabaseAdmin.rpc("midnight_reset");
+  const [resetResult, transferResult] = await Promise.all([
+    supabaseAdmin.rpc("midnight_reset"),
+    supabaseAdmin.rpc("transfer_completed_event_points"),
+  ]);
 
-  if (error) {
-    console.error("midnight_reset error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (resetResult.error) {
+    console.error("midnight_reset error:", resetResult.error);
+    return NextResponse.json({ error: resetResult.error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  if (transferResult.error) {
+    console.error("transfer_completed_event_points error:", transferResult.error);
+  }
+
+  return NextResponse.json({
+    reset: resetResult.data,
+    transfer: transferResult.data,
+  });
 }

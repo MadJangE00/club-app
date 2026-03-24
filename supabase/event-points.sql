@@ -80,3 +80,36 @@ BEGIN
   RETURN jsonb_build_object('success', true, 'deducted', v_cost);
 END;
 $$;
+
+-- ============================================
+-- 완료된 모임 포인트 → 동호회 바구니 이전
+-- (자정 크론에서 호출)
+-- ============================================
+CREATE OR REPLACE FUNCTION transfer_completed_event_points()
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_transferred INTEGER := 0;
+BEGIN
+  -- point_basket > 0 이고 날짜가 지난 모임만 처리
+  UPDATE clubs c
+  SET point_basket = c.point_basket + e.point_basket
+  FROM events e
+  WHERE e.club_id = c.id
+    AND e.event_date < NOW()
+    AND e.point_basket > 0;
+
+  GET DIAGNOSTICS v_transferred = ROW_COUNT;
+
+  -- 이전 완료된 모임 바구니 초기화
+  UPDATE events
+  SET point_basket = 0
+  WHERE event_date < NOW()
+    AND point_basket > 0;
+
+  RETURN jsonb_build_object('success', true, 'transferred_events', v_transferred);
+END;
+$$;
