@@ -56,6 +56,13 @@ export default function NewEventPage() {
 
     setLoading(true);
     try {
+      // 모임 개설 포인트 차감 (5P → 동호회 바구니)
+      const { data: pointResult } = await supabase.rpc("pay_event_creation", { p_club_id: form.club_id });
+      if (!pointResult?.success) {
+        alert(pointResult?.message || "포인트가 부족합니다 (5P 필요)");
+        return;
+      }
+
       const { error } = await supabase.from("events").insert({
         club_id: form.club_id,
         title: form.title,
@@ -197,7 +204,7 @@ export default function NewEventPage() {
               disabled={loading}
               className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
             >
-              {loading ? "생성 중..." : "모임 만들기"}
+              {loading ? "생성 중..." : "모임 만들기 (5P)"}
             </button>
             <button
               type="button"

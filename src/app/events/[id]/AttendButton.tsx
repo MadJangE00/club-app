@@ -91,6 +91,18 @@ export default function AttendButton({ eventId, clubId, eventDate, maxParticipan
         return;
       }
 
+      // 참석 시 포인트 차감 (3P → 모임 바구니, 이미 납부했으면 스킵)
+      if (newStatus === "attending") {
+        const { data: pointResult } = await supabase.rpc("pay_event_attendance", { p_event_id: eventId });
+        if (pointResult && !pointResult.success) {
+          alert(pointResult.message || "포인트가 부족합니다 (3P 필요)");
+          // 참석 취소
+          await supabase.from("attendance").update({ status: status || "not_attending" } as any)
+            .eq("event_id", eventId).eq("user_id", user.id);
+          return;
+        }
+      }
+
       setStatus(newStatus);
       router.refresh();
     } catch (error: any) {
@@ -171,7 +183,7 @@ export default function AttendButton({ eventId, clubId, eventDate, maxParticipan
               : "bg-green-100 text-green-700 hover:bg-green-200"
           }`}
         >
-          {status === "attending" ? "✅ 참석" : "참석"}
+          {status === "attending" ? "✅ 참석" : "참석 (3P)"}
         </button>
         <button
           onClick={() => handleAttend("maybe")}
