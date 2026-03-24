@@ -71,23 +71,17 @@ export default function DailyAttendance() {
           .limit(30),
       ]);
 
-      // 연속 출석일 계산
+      // 연속 출석일 계산 (한국 날짜 문자열 직접 비교)
+      const getKoreaDateStr = (daysOffset = 0) => {
+        const d = new Date();
+        d.setTime(d.getTime() + 9 * 60 * 60 * 1000 + daysOffset * 86400000);
+        return d.toISOString().split("T")[0];
+      };
+
       let consecutiveDays = 0;
       if (recentAttendance.data && recentAttendance.data.length > 0) {
-        const koreaToday = new Date(
-          new Date().getTime() + 9 * 60 * 60 * 1000
-        );
-        koreaToday.setHours(0, 0, 0, 0);
-
         for (let i = 0; i < recentAttendance.data.length; i++) {
-          const [year, month, day] = recentAttendance.data[i].attended_at
-            .split("-")
-            .map(Number);
-          const checkDate = new Date(year, month - 1, day);
-          const expectedDate = new Date(koreaToday);
-          expectedDate.setDate(koreaToday.getDate() - i);
-
-          if (checkDate.getTime() === expectedDate.getTime()) {
+          if (recentAttendance.data[i].attended_at === getKoreaDateStr(-i)) {
             consecutiveDays++;
           } else {
             break;
