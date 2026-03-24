@@ -10,6 +10,7 @@ const ADMIN_CATEGORIES = ["공지", "자유", "버그신고"];
 export default function NewBoardPostPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isFreeToday, setIsFreeToday] = useState(false);
   const [category, setCategory] = useState("자유");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -19,8 +20,23 @@ export default function NewBoardPostPage() {
     async function check() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
-      const { data } = await supabase.from("users").select("role").eq("id", user.id).single();
-      if (data?.role === "admin") setIsAdmin(true);
+
+      const today = new Date();
+      today.setTime(today.getTime() + 9 * 60 * 60 * 1000);
+      const todayStr = today.toISOString().split("T")[0];
+
+      const [userRes, countRes] = await Promise.all([
+        supabase.from("users").select("role").eq("id", user.id).single(),
+        supabase
+          .from("board_posts")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .gte("created_at", `${todayStr}T00:00:00+09:00`)
+          .lt("created_at", `${todayStr}T23:59:59+09:00`),
+      ]);
+
+      if (userRes.data?.role === "admin") setIsAdmin(true);
+      setIsFreeToday((countRes.count || 0) === 0);
     }
     check();
   }, [router]);
@@ -34,8 +50,8 @@ export default function NewBoardPostPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
-      // 포인트 차감 (3P)
-      const { data: pointResult } = await supabase.rpc("deduct_post_points");
+      // 포인트 차감 (하루 첫 글 무료, 이후 3P)
+      const { data: pointResult } = await supabase.rpc("deduct_board_post_points");
       if (!pointResult?.success) {
         alert(pointResult?.message || "포인트가 부족합니다");
         return;
@@ -112,7 +128,7 @@ export default function NewBoardPostPage() {
             disabled={submitting || !title.trim() || !content.trim()}
             className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            {submitting ? "등록 중..." : "등록 (3P)"}
+            {submitting ? "등록 중..." : isFreeToday ? "등록 (오늘 무료 🎁)" : "등록 (3P)"}
           </button>
         </div>
       </form>
