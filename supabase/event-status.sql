@@ -14,8 +14,14 @@ CREATE TABLE IF NOT EXISTS public.photo_purchases (
   UNIQUE(photo_id, buyer_id)
 );
 ALTER TABLE public.photo_purchases ENABLE ROW LEVEL SECURITY;
-CREATE POLICY IF NOT EXISTS "purchases_select" ON photo_purchases FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "purchases_insert" ON photo_purchases FOR INSERT WITH CHECK (auth.uid() = buyer_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'photo_purchases' AND policyname = 'purchases_select') THEN
+    CREATE POLICY "purchases_select" ON photo_purchases FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'photo_purchases' AND policyname = 'purchases_insert') THEN
+    CREATE POLICY "purchases_insert" ON photo_purchases FOR INSERT WITH CHECK (auth.uid() = buyer_id);
+  END IF;
+END $$;
 
 -- set_event_pending RPC
 CREATE OR REPLACE FUNCTION set_event_pending(p_event_id UUID)
