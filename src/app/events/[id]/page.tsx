@@ -145,6 +145,11 @@ export default async function EventDetailPage({
               {event.users?.nickname || event.users?.name || "사용자"}
             </div>
           </div>
+
+          <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+            <div className="text-sm text-amber-600">🪙 포인트 바구니</div>
+            <div className="font-bold text-amber-700 text-lg">{event.point_basket ?? 0}P</div>
+          </div>
         </div>
       </div>
 

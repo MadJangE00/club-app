@@ -114,7 +114,7 @@ export default async function ClubDetailPage({
       </div>
 
       {/* 통계 */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow p-6 text-center">
           <div className="text-3xl font-bold text-blue-600">{members.length}</div>
           <div className="text-gray-700 font-medium mt-1">멤버</div>
@@ -126,6 +126,10 @@ export default async function ClubDetailPage({
         <div className="bg-white rounded-lg shadow p-6 text-center">
           <div className="text-3xl font-bold text-purple-600">{posts.length}</div>
           <div className="text-gray-700 font-medium mt-1">게시글</div>
+        </div>
+        <div className="bg-amber-50 rounded-lg shadow p-6 text-center border border-amber-200">
+          <div className="text-3xl font-bold text-amber-600">{club.point_basket ?? 0}</div>
+          <div className="text-amber-700 font-medium mt-1">🪙 포인트 바구니</div>
         </div>
       </div>
 
