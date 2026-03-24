@@ -14,6 +14,7 @@ export default function NewClubPage() {
     description: "",
   });
   const [clubCreationEnabled, setClubCreationEnabled] = useState(true);
+  const [clubCreationCost, setClubCreationCost] = useState(30);
   const [showDisabledModal, setShowDisabledModal] = useState(false);
 
   useEffect(() => {
@@ -28,12 +29,15 @@ export default function NewClubPage() {
       // 동호회 개설 설정 확인
       const { data } = await supabase
         .from("site_settings")
-        .select("club_creation_enabled")
+        .select("club_creation_enabled, club_creation_cost")
         .eq("id", 1)
         .single();
-      
+
       if (data?.club_creation_enabled === false) {
         setClubCreationEnabled(false);
+      }
+      if (data?.club_creation_cost != null) {
+        setClubCreationCost(data.club_creation_cost);
       }
     };
     init();
@@ -52,6 +56,13 @@ export default function NewClubPage() {
 
     setLoading(true);
     try {
+      // 동호회 개설 포인트 차감
+      const { data: pointResult } = await supabase.rpc("pay_club_creation_cost");
+      if (!pointResult?.success) {
+        alert(pointResult?.message || "포인트가 부족합니다");
+        return;
+      }
+
       // 먼저 users 테이블에 사용자가 있는지 확인
       const { data: existingUser } = await supabase
         .from("users")
@@ -106,7 +117,8 @@ export default function NewClubPage() {
   return (
     <>
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">➕ 새 동호회 만들기</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">➕ 새 동호회 만들기</h2>
+        <p className="text-sm text-amber-600 mb-6">🪙 동호회 개설 시 {clubCreationCost}P가 차감됩니다.</p>
 
         {/* 비활성화 안내 */}
         {!clubCreationEnabled && (
@@ -157,7 +169,7 @@ export default function NewClubPage() {
               disabled={loading || !clubCreationEnabled}
               className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "생성 중..." : "동호회 만들기"}
+              {loading ? "생성 중..." : `동호회 만들기 (${clubCreationCost}P)`}
             </button>
             <button
               type="button"
