@@ -105,7 +105,7 @@ export default async function PostDetailPage({
       </div>
 
       {/* 댓글 */}
-      <Comments postId={post.id} />
+      <Comments postId={post.id} postAuthorId={post.user_id} />
 
       {/* 뒤로가기 */}
       <div className="text-center">

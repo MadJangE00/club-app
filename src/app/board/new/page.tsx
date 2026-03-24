@@ -34,6 +34,13 @@ export default function NewBoardPostPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
+      // 포인트 차감 (3P)
+      const { data: pointResult } = await supabase.rpc("deduct_post_points");
+      if (!pointResult?.success) {
+        alert(pointResult?.message || "포인트가 부족합니다");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("board_posts")
         .insert({ user_id: user.id, category, title: title.trim(), content: content.trim() })
@@ -105,7 +112,7 @@ export default function NewBoardPostPage() {
             disabled={submitting || !title.trim() || !content.trim()}
             className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            {submitting ? "등록 중..." : "등록"}
+            {submitting ? "등록 중..." : "등록 (3P)"}
           </button>
         </div>
       </form>

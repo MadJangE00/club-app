@@ -18,9 +18,10 @@ interface Comment {
 
 interface CommentsProps {
   postId: string;
+  postAuthorId: string;
 }
 
-export default function Comments({ postId }: CommentsProps) {
+export default function Comments({ postId, postAuthorId }: CommentsProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -67,6 +68,15 @@ export default function Comments({ postId }: CommentsProps) {
 
     setLoading(true);
     try {
+      // 포인트 차감 (1P, 자신의 게시글 제외)
+      const { data: pointResult } = await supabase.rpc("deduct_comment_points", {
+        p_post_author_id: postAuthorId,
+      });
+      if (!pointResult?.success) {
+        alert(pointResult?.message || "포인트가 부족합니다");
+        return;
+      }
+
       const { error } = await supabase.from("comments").insert({
         post_id: postId,
         user_id: user.id,
@@ -215,7 +225,7 @@ export default function Comments({ postId }: CommentsProps) {
             disabled={loading || !newComment.trim()}
             className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
           >
-            {loading ? "작성 중..." : "댓글 작성"}
+            {loading ? "작성 중..." : `댓글 작성 ${user?.id === postAuthorId ? "(무료)" : "(1P)"}`}
           </button>
         </form>
       ) : (

@@ -53,6 +53,13 @@ export default function NewPostPage() {
 
     setLoading(true);
     try {
+      // 포인트 차감 (3P)
+      const { data: pointResult } = await supabase.rpc("deduct_post_points");
+      if (!pointResult?.success) {
+        alert(pointResult?.message || "포인트가 부족합니다");
+        return;
+      }
+
       const { error } = await supabase.from("posts").insert({
         club_id: form.club_id,
         title: form.title,
@@ -160,7 +167,7 @@ export default function NewPostPage() {
             disabled={loading || clubs.length === 0}
             className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
           >
-            {loading ? "작성 중..." : "게시글 작성"}
+            {loading ? "작성 중..." : "게시글 작성 (3P)"}
           </button>
           <button
             type="button"
