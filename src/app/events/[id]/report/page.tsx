@@ -82,11 +82,15 @@ export default async function EventReportPage({ params }: { params: Promise<{ id
           </div>
         </div>
 
-        {/* 모임 포인트 바구니 */}
-        {event.point_basket > 0 && (
+        {/* 모임 포인트 결과 */}
+        {((event.final_point_basket ?? event.point_basket) > 0) && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg px-5 py-4 flex items-center justify-between">
-            <span className="text-amber-800 font-medium">🪙 모임 포인트 바구니</span>
-            <span className="text-2xl font-bold text-amber-600">{event.point_basket}P</span>
+            <span className="text-amber-800 font-medium">
+              🪙 {event.final_point_basket != null ? "최종 모임 포인트" : "모임 포인트 바구니"}
+            </span>
+            <span className="text-2xl font-bold text-amber-600">
+              {event.final_point_basket ?? event.point_basket}P
+            </span>
           </div>
         )}
 

@@ -147,8 +147,14 @@ export default async function EventDetailPage({
           </div>
 
           <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-            <div className="text-sm text-amber-600">🪙 포인트 바구니</div>
-            <div className="font-bold text-amber-700 text-lg">{event.point_basket ?? 0}P</div>
+            <div className="text-sm text-amber-600">
+              {isEventPast && event.final_point_basket != null ? "🪙 최종 포인트 결과" : "🪙 포인트 바구니"}
+            </div>
+            <div className="font-bold text-amber-700 text-lg">
+              {isEventPast && event.final_point_basket != null
+                ? `${event.final_point_basket}P`
+                : `${event.point_basket ?? 0}P`}
+            </div>
           </div>
         </div>
       </div>

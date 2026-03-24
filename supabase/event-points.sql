@@ -3,6 +3,8 @@ ALTER TABLE public.clubs ADD COLUMN IF NOT EXISTS point_basket INTEGER DEFAULT 0
 
 -- 모임 포인트 바구니
 ALTER TABLE public.events ADD COLUMN IF NOT EXISTS point_basket INTEGER DEFAULT 0;
+-- 모임 최종 포인트 (이전 후 기록용)
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS final_point_basket INTEGER DEFAULT NULL;
 
 -- 참여 포인트 납부 여부 추적
 ALTER TABLE public.attendance ADD COLUMN IF NOT EXISTS points_paid BOOLEAN DEFAULT FALSE;
@@ -104,9 +106,10 @@ BEGIN
 
   GET DIAGNOSTICS v_transferred = ROW_COUNT;
 
-  -- 이전 완료된 모임 바구니 초기화
+  -- 이전 완료된 모임 바구니 초기화 (최종값 기록 후 0으로)
   UPDATE events
-  SET point_basket = 0
+  SET final_point_basket = point_basket,
+      point_basket = 0
   WHERE event_date < NOW()
     AND point_basket > 0;
 

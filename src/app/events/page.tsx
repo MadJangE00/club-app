@@ -14,6 +14,7 @@ async function getEvents() {
       location,
       max_participants,
       point_basket,
+      final_point_basket,
       created_at,
       clubs (
         id,
@@ -105,7 +106,7 @@ export default async function EventsPage() {
                     {event.max_participants && ` / ${event.max_participants}명 제한`}
                   </span>
                   {(event.point_basket ?? 0) > 0 && (
-                    <span className="text-amber-600 font-medium">🪙 {event.point_basket}P</span>
+                    <span className="text-amber-600 font-medium">🪙 바구니 {event.point_basket}P</span>
                   )}
                 </div>
               </Link>
@@ -135,8 +136,10 @@ export default async function EventsPage() {
                     <h4 className="font-medium text-gray-700">{event.title}</h4>
                   </div>
                   <div className="flex items-center gap-3">
-                    {(event.point_basket ?? 0) > 0 && (
-                      <span className="text-sm text-amber-600 font-medium">🪙 {event.point_basket}P</span>
+                    {(event.final_point_basket ?? event.point_basket ?? 0) > 0 && (
+                      <span className="text-sm text-amber-600 font-medium">
+                        🪙 {event.final_point_basket ?? event.point_basket}P
+                      </span>
                     )}
                     <span className="text-sm text-gray-500">
                       {new Date(event.event_date).toLocaleDateString("ko-KR")}
