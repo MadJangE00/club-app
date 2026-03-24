@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 interface BankData {
   bankBalance: number;
   prizeBalance: number;
+  totalMembers: number;
+  yesterdayAttendance: number;
   loading: boolean;
 }
 
@@ -13,24 +15,39 @@ export default function BankPanel() {
   const [data, setData] = useState<BankData>({
     bankBalance: 0,
     prizeBalance: 0,
+    totalMembers: 0,
+    yesterdayAttendance: 0,
     loading: true,
   });
   const [resetting, setResetting] = useState(false);
 
-  async function fetchBalances() {
-    const [bankRes, prizeRes] = await Promise.all([
+  async function fetchData() {
+    // 한국 시간 기준 어제 날짜
+    const koreaTime = new Date(new Date().getTime() + 9 * 60 * 60 * 1000);
+    koreaTime.setDate(koreaTime.getDate() - 1);
+    const yesterday = koreaTime.toISOString().split("T")[0];
+
+    const [bankRes, prizeRes, membersRes, yesterdayRes] = await Promise.all([
       supabase.from("point_bank").select("balance").eq("id", 1).single(),
       supabase.from("prize_pool").select("balance").eq("id", 1).single(),
+      supabase.from("users").select("id", { count: "exact", head: true }),
+      supabase
+        .from("daily_attendance")
+        .select("id", { count: "exact", head: true })
+        .eq("attended_at", yesterday),
     ]);
+
     setData({
       bankBalance: bankRes.data?.balance || 0,
       prizeBalance: prizeRes.data?.balance || 0,
+      totalMembers: membersRes.count || 0,
+      yesterdayAttendance: yesterdayRes.count || 0,
       loading: false,
     });
   }
 
   useEffect(() => {
-    fetchBalances();
+    fetchData();
   }, []);
 
   const handleReset = async () => {
@@ -50,7 +67,7 @@ export default function BankPanel() {
       if (!res.ok) throw new Error(result.error);
 
       alert(`리셋 완료!\n회원 수: ${result.member_count}명\n새 은행 잔액: ${result.new_bank_balance}P`);
-      await fetchBalances();
+      await fetchData();
     } catch (error: any) {
       alert(`실패: ${error.message}`);
     } finally {
@@ -60,10 +77,35 @@ export default function BankPanel() {
 
   if (data.loading) return null;
 
+  const attendanceRate = data.totalMembers > 0
+    ? Math.round((data.yesterdayAttendance / data.totalMembers) * 100)
+    : 0;
+  const absentCount = data.totalMembers - data.yesterdayAttendance;
+
   return (
-    <div className="bg-white rounded-xl shadow p-6">
-      <h2 className="text-lg font-bold text-gray-900 mb-4">🏦 포인트 은행 관리</h2>
-      <div className="grid grid-cols-2 gap-4 mb-4">
+    <div className="bg-white rounded-xl shadow p-6 space-y-4">
+      <h2 className="text-lg font-bold text-gray-900">🏦 포인트 은행 관리</h2>
+
+      {/* 전날 출석률 */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-medium text-gray-600">📊 전날 출석률</span>
+          <span className="text-lg font-bold text-gray-900">{attendanceRate}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div
+            className="bg-blue-500 h-2.5 rounded-full transition-all"
+            style={{ width: `${attendanceRate}%` }}
+          />
+        </div>
+        <div className="flex justify-between text-xs text-gray-500 mt-1.5">
+          <span>✅ 출석 {data.yesterdayAttendance}명</span>
+          <span>❌ 미출석 {absentCount}명 / 전체 {data.totalMembers}명</span>
+        </div>
+      </div>
+
+      {/* 은행 & 상금 */}
+      <div className="grid grid-cols-2 gap-4">
         <div className="bg-blue-50 rounded-lg p-4 text-center">
           <div className="text-sm text-gray-500 mb-1">현재 은행 잔액</div>
           <div className="text-2xl font-bold text-blue-600">
@@ -77,6 +119,7 @@ export default function BankPanel() {
           </div>
         </div>
       </div>
+
       <button
         onClick={handleReset}
         disabled={resetting}
@@ -84,7 +127,7 @@ export default function BankPanel() {
       >
         {resetting ? "처리 중..." : "🔄 은행 리셋 (회원 수 × 10P)"}
       </button>
-      <p className="text-xs text-gray-400 mt-2 text-center">
+      <p className="text-xs text-gray-400 text-center">
         상금 풀은 변경되지 않습니다. 자정에 자동 리셋됩니다.
       </p>
     </div>
