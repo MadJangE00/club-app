@@ -6,7 +6,7 @@ import PrintButton from "./PrintButton";
 export const revalidate = 0;
 
 async function getEventWithAttendance(id: string) {
-  const [eventRes, attendanceRes] = await Promise.all([
+  const [eventRes, attendanceRes, marketRes] = await Promise.all([
     supabase
       .from("events")
       .select(`*, clubs(id, name), users(name, nickname)`)
@@ -17,13 +17,22 @@ async function getEventWithAttendance(id: string) {
       .select(`status, attended_at, users(name, nickname)`)
       .eq("event_id", id)
       .order("status"),
+    supabase
+      .from("photo_posts")
+      .select("id, title, image_url, price")
+      .eq("event_id", id)
+      .single(),
   ]);
-  return { event: eventRes.data as any, attendance: (attendanceRes.data || []) as any[] };
+  return {
+    event: eventRes.data as any,
+    attendance: (attendanceRes.data || []) as any[],
+    marketPost: marketRes.data as any,
+  };
 }
 
 export default async function EventReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { event, attendance } = await getEventWithAttendance(id);
+  const { event, attendance, marketPost } = await getEventWithAttendance(id);
   if (!event) notFound();
 
   const isEventPast = new Date(event.event_date) < new Date();
@@ -81,6 +90,29 @@ export default async function EventReportPage({ params }: { params: Promise<{ id
             </div>
           </div>
         </div>
+
+        {/* 모임 결과 이미지 */}
+        {marketPost && (
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 mb-3">📸 모임 결과 사진</h2>
+            <img
+              src={marketPost.image_url}
+              alt={marketPost.title}
+              className="w-full rounded-xl object-cover max-h-80"
+            />
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-sm text-gray-600">{marketPost.title}</span>
+              {marketPost.price > 0 && (
+                <Link
+                  href={`/photos/${marketPost.id}`}
+                  className="text-sm text-pink-600 hover:underline font-medium"
+                >
+                  🛒 마켓에서 구매 ({marketPost.price}P)
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 모임 포인트 결과 */}
         {((event.final_point_basket ?? event.point_basket) > 0) && (
