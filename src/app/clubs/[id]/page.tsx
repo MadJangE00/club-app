@@ -42,7 +42,26 @@ async function getEvents(clubId: string) {
     .select("*")
     .eq("club_id", clubId)
     .order("event_date", { ascending: true });
-  
+
+  return (data || []) as any[];
+}
+
+async function getPastEventsWithReports(clubId: string) {
+  const { data } = await supabase
+    .from("events")
+    .select(`
+      id,
+      title,
+      event_date,
+      status,
+      final_point_basket,
+      point_basket,
+      photo_posts (id, image_url)
+    `)
+    .eq("club_id", clubId)
+    .lt("event_date", new Date().toISOString())
+    .order("event_date", { ascending: false });
+
   return (data || []) as any[];
 }
 
@@ -75,10 +94,11 @@ export default async function ClubDetailPage({
     notFound();
   }
 
-  const [members, events, posts] = await Promise.all([
+  const [members, events, posts, pastEvents] = await Promise.all([
     getMembers(id),
     getEvents(id),
     getPosts(id),
+    getPastEventsWithReports(id),
   ]);
 
   return (
@@ -197,6 +217,64 @@ export default async function ClubDetailPage({
 
       {/* 캘린더 */}
       <Calendar events={events} clubId={id} />
+
+      {/* 갤러리 - 완료된 모임 레포트 */}
+      {pastEvents.length > 0 && (
+        <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">🖼️ 갤러리</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {pastEvents.map((event) => {
+              const image = event.photo_posts?.[0];
+              const points = event.final_point_basket ?? event.point_basket ?? 0;
+              const statusLabel =
+                event.status === "completed" ? "종료됨" :
+                event.status === "pending" ? "대기중" : "종료";
+              return (
+                <Link
+                  key={event.id}
+                  href={`/events/${event.id}/report`}
+                  className="group relative rounded-xl overflow-hidden border border-gray-100 hover:shadow-md transition-shadow bg-gray-50"
+                >
+                  {image ? (
+                    <div className="aspect-square">
+                      <img
+                        src={image.image_url}
+                        alt={event.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-square flex items-center justify-center bg-gray-100 text-gray-300 text-4xl">
+                      📋
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-2">
+                    <div className="text-white text-xs font-semibold truncate">{event.title}</div>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-gray-300 text-xs">
+                        {new Date(event.event_date).toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}
+                      </span>
+                      {points > 0 && (
+                        <span className="text-amber-300 text-xs font-medium">🪙 {points}P</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="absolute top-2 right-2">
+                    <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${
+                      event.status === "completed" ? "bg-gray-800/70 text-gray-200" :
+                      event.status === "pending" ? "bg-yellow-500/80 text-white" :
+                      "bg-gray-500/70 text-gray-200"
+                    }`}>
+                      {statusLabel}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
