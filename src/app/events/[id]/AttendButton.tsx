@@ -11,11 +11,12 @@ interface Props {
   eventDate: string;
   maxParticipants: number | null;
   currentCount: number;
+  eventStatus: string;
 }
 
 type AttendanceStatus = "attending" | "maybe" | "not_attending";
 
-export default function AttendButton({ eventId, clubId, eventDate, maxParticipants, currentCount }: Props) {
+export default function AttendButton({ eventId, clubId, eventDate, maxParticipants, currentCount, eventStatus }: Props) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AttendanceStatus | null>(null);
@@ -122,7 +123,7 @@ export default function AttendButton({ eventId, clubId, eventDate, maxParticipan
   // 모임 날짜 확인
   const now = new Date();
   const eventDateTime = new Date(eventDate);
-  const isEventPast = eventDateTime < now;
+  const isTimePast = eventDateTime < now;
 
   if (loading) {
     return (
@@ -149,8 +150,26 @@ export default function AttendButton({ eventId, clubId, eventDate, maxParticipan
     );
   }
 
-  // 모임이 끝난 경우
-  if (isEventPast) {
+  // pending 상태: 참여 변경 불가
+  if (eventStatus === "pending") {
+    return (
+      <div className="px-6 py-3 bg-yellow-100 text-yellow-800 rounded-lg font-medium">
+        🔶 대기중 - 참여 변경 불가
+      </div>
+    );
+  }
+
+  // completed 상태: 종료된 모임
+  if (eventStatus === "completed") {
+    return (
+      <div className="px-6 py-3 bg-gray-100 text-gray-600 rounded-lg font-medium">
+        ⬛ 종료된 모임
+      </div>
+    );
+  }
+
+  // 모임이 끝난 경우 (active 상태이지만 시간 지남)
+  if (isTimePast) {
     return (
       <div className="space-y-3">
         <div className="px-6 py-3 bg-gray-100 text-gray-600 rounded-lg font-medium">
@@ -206,7 +225,7 @@ export default function AttendButton({ eventId, clubId, eventDate, maxParticipan
           {status === "not_attending" ? "❌ 불참" : "불참"}
         </button>
       </div>
-      
+
       {status && (
         <button
           onClick={handleConfirm}

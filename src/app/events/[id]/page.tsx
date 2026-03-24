@@ -23,7 +23,7 @@ async function getEvent(id: string) {
     `)
     .eq("id", id)
     .single();
-  
+
   return data as any;
 }
 
@@ -40,28 +40,30 @@ async function getAttendance(eventId: string) {
       )
     `)
     .eq("event_id", eventId);
-  
+
   return (data || []) as any[];
 }
 
-export default async function EventDetailPage({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
+export default async function EventDetailPage({
+  params
+}: {
+  params: Promise<{ id: string }>
 }) {
   const { id } = await params;
   const event = await getEvent(id);
-  
+
   if (!event) {
     notFound();
   }
 
   const attendance = await getAttendance(id);
-  
+
   const attending = attendance.filter((a) => a.status === "attending");
   const maybe = attendance.filter((a) => a.status === "maybe");
   const notAttending = attendance.filter((a) => a.status === "not_attending");
-  const isEventPast = new Date(event.event_date) < new Date();
+
+  const eventStatus = event.status ?? "active";
+  const isEventPast = new Date(event.event_date) < new Date() || eventStatus === "pending" || eventStatus === "completed";
 
   return (
     <div className="space-y-6">
@@ -69,18 +71,30 @@ export default async function EventDetailPage({
       <div className="bg-white rounded-xl shadow-lg p-8">
         <div className="flex justify-between items-start">
           <div>
-            <Link 
+            <Link
               href={`/clubs/${event.clubs?.id}`}
               className="text-blue-600 hover:underline font-medium"
             >
               {event.clubs?.name}
             </Link>
-            <h2 className="text-3xl font-bold text-gray-900 mt-2">{event.title}</h2>
+            <div className="flex items-center gap-3 mt-2">
+              <h2 className="text-3xl font-bold text-gray-900">{event.title}</h2>
+              {eventStatus === "pending" && (
+                <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-semibold rounded-full border border-yellow-300">
+                  🔶 대기중
+                </span>
+              )}
+              {eventStatus === "completed" && (
+                <span className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full border border-gray-300">
+                  ⬛ 종료됨
+                </span>
+              )}
+            </div>
             {event.description && (
               <p className="text-gray-700 mt-3 text-lg">{event.description}</p>
             )}
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center flex-wrap justify-end">
             {isEventPast && (
               <Link
                 href={`/events/${id}/report`}
@@ -89,17 +103,28 @@ export default async function EventDetailPage({
                 📋 레포트
               </Link>
             )}
+            {eventStatus === "completed" && (
+              <Link
+                href={`/events/${id}/market`}
+                className="px-4 py-2 bg-pink-600 text-white text-sm font-medium rounded-lg hover:bg-pink-700 transition-colors"
+              >
+                📸 마켓에 올리기
+              </Link>
+            )}
             <AttendButton
               eventId={id}
               clubId={event.club_id}
               eventDate={event.event_date}
               maxParticipants={event.max_participants}
               currentCount={attending.length}
+              eventStatus={eventStatus}
             />
             <EventActions
               eventId={id}
               createdBy={event.created_by}
               clubId={event.club_id}
+              eventStatus={eventStatus}
+              eventDate={event.event_date}
             />
           </div>
         </div>
@@ -122,14 +147,14 @@ export default async function EventDetailPage({
               })}
             </div>
           </div>
-          
+
           {event.location && (
             <div>
               <div className="text-sm text-gray-500">장소</div>
               <div className="font-medium text-gray-900">📍 {event.location}</div>
             </div>
           )}
-          
+
           {event.max_participants && (
             <div>
               <div className="text-sm text-gray-500">인원 제한</div>
@@ -138,7 +163,7 @@ export default async function EventDetailPage({
               </div>
             </div>
           )}
-          
+
           <div>
             <div className="text-sm text-gray-500">주최자</div>
             <div className="font-medium text-gray-900">

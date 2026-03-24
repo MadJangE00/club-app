@@ -14,6 +14,7 @@ async function getPhotos() {
       image_url,
       created_at,
       club_id,
+      price,
       clubs (
         id,
         name
@@ -24,13 +25,13 @@ async function getPhotos() {
       )
     `)
     .order("created_at", { ascending: false });
-  
+
   return (data || []) as any[];
 }
 
 async function getVoteCounts(photoIds: string[]) {
   if (photoIds.length === 0) return {};
-  
+
   const { data } = await supabase
     .from("photo_votes")
     .select("photo_id")
@@ -40,7 +41,7 @@ async function getVoteCounts(photoIds: string[]) {
   data?.forEach((v: any) => {
     counts[v.photo_id] = (counts[v.photo_id] || 0) + 1;
   });
-  
+
   return counts;
 }
 
@@ -67,32 +68,46 @@ export default async function PhotosPage() {
 
       {photos.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {photos.map((photo) => (
-            <Link
-              key={photo.id}
-              href={`/photos/${photo.id}`}
-              className="bg-white rounded-xl shadow overflow-hidden hover:shadow-lg transition-shadow"
-            >
-              <div className="aspect-square relative bg-gray-100">
-                <img
-                  src={photo.image_url}
-                  alt={photo.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-gray-900 truncate">{photo.title}</h3>
-                <div className="flex justify-between items-center mt-2 text-sm">
-                  <span className="text-pink-600 font-medium">
-                    {photo.clubs?.name}
-                  </span>
-                  <span className="text-gray-500">
-                    👍 {voteCounts[photo.id] || 0}
-                  </span>
+          {photos.map((photo) => {
+            const hasPrice = photo.price != null && photo.price > 0;
+            return (
+              <Link
+                key={photo.id}
+                href={`/photos/${photo.id}`}
+                className="bg-white rounded-xl shadow overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                <div className="aspect-square relative bg-gray-100">
+                  <img
+                    src={photo.image_url}
+                    alt={photo.title}
+                    className="w-full h-full object-cover"
+                  />
+                  {hasPrice && (
+                    <div className="absolute top-2 right-2 px-2 py-1 bg-pink-600 text-white text-xs font-bold rounded-full shadow">
+                      🛒 {photo.price}P
+                    </div>
+                  )}
                 </div>
-              </div>
-            </Link>
-          ))}
+                <div className="p-4">
+                  <h3 className="font-bold text-gray-900 truncate">{photo.title}</h3>
+                  <div className="flex justify-between items-center mt-2 text-sm">
+                    <span className="text-pink-600 font-medium">
+                      {photo.clubs?.name}
+                    </span>
+                    {hasPrice ? (
+                      <span className="text-pink-600 font-semibold text-xs">
+                        🛒 {photo.price}P
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">
+                        👍 {voteCounts[photo.id] || 0}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow p-12 text-center">
