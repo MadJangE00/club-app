@@ -5,76 +5,88 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 
-interface AttendanceData {
+interface PageData {
   todayChecked: boolean;
   totalPoints: number;
   consecutiveDays: number;
+  bankBalance: number;
+  prizeBalance: number;
   loading: boolean;
 }
 
 export default function DailyAttendance() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [data, setData] = useState<AttendanceData>({
+  const [data, setData] = useState<PageData>({
     todayChecked: false,
     totalPoints: 0,
     consecutiveDays: 0,
+    bankBalance: 0,
+    prizeBalance: 0,
     loading: true,
   });
   const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     async function loadData() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      // 은행 & 상금 잔액 (비로그인도 표시)
+      const [bankRes, prizeRes] = await Promise.all([
+        supabase.from("point_bank").select("balance").eq("id", 1).single(),
+        supabase.from("prize_pool").select("balance").eq("id", 1).single(),
+      ]);
+
       if (!user) {
-        setData((prev) => ({ ...prev, loading: false }));
+        setData((prev) => ({
+          ...prev,
+          bankBalance: bankRes.data?.balance || 0,
+          prizeBalance: prizeRes.data?.balance || 0,
+          loading: false,
+        }));
         return;
       }
+
       setUser(user);
 
-      // 한국 시간대로 오늘 날짜 계산
       const now = new Date();
-      const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
-      const today = koreaTime.toISOString().split('T')[0];
+      const koreaTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+      const today = koreaTime.toISOString().split("T")[0];
 
-      // 오늘 출석했는지 확인
-      const { data: todayAttendance } = await supabase
-        .from("daily_attendance")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("attended_at", today)
-        .single();
-
-      // 총 포인트 가져오기 (users 테이블에서)
-      const { data: userData } = await supabase
-        .from("users")
-        .select("points")
-        .eq("id", user.id)
-        .single();
+      const [todayAttendance, userData, recentAttendance] = await Promise.all([
+        supabase
+          .from("daily_attendance")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("attended_at", today)
+          .single(),
+        supabase.from("users").select("points").eq("id", user.id).single(),
+        supabase
+          .from("daily_attendance")
+          .select("attended_at")
+          .eq("user_id", user.id)
+          .order("attended_at", { ascending: false })
+          .limit(30),
+      ]);
 
       // 연속 출석일 계산
-      const { data: recentAttendance } = await supabase
-        .from("daily_attendance")
-        .select("attended_at")
-        .eq("user_id", user.id)
-        .order("attended_at", { ascending: false })
-        .limit(30);
-
       let consecutiveDays = 0;
-      if (recentAttendance && recentAttendance.length > 0) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        // 한국 시간 보정
-        const koreaToday = new Date(today.getTime() + (9 * 60 * 60 * 1000));
-        
-        for (let i = 0; i < recentAttendance.length; i++) {
-          // 날짜 문자열을 직접 파싱 (YYYY-MM-DD)
-          const [year, month, day] = recentAttendance[i].attended_at.split('-').map(Number);
+      if (recentAttendance.data && recentAttendance.data.length > 0) {
+        const koreaToday = new Date(
+          new Date().getTime() + 9 * 60 * 60 * 1000
+        );
+        koreaToday.setHours(0, 0, 0, 0);
+
+        for (let i = 0; i < recentAttendance.data.length; i++) {
+          const [year, month, day] = recentAttendance.data[i].attended_at
+            .split("-")
+            .map(Number);
           const checkDate = new Date(year, month - 1, day);
-          
           const expectedDate = new Date(koreaToday);
           expectedDate.setDate(koreaToday.getDate() - i);
-          
+
           if (checkDate.getTime() === expectedDate.getTime()) {
             consecutiveDays++;
           } else {
@@ -84,9 +96,11 @@ export default function DailyAttendance() {
       }
 
       setData({
-        todayChecked: !!todayAttendance,
-        totalPoints: userData?.points || 0,
+        todayChecked: !!todayAttendance.data,
+        totalPoints: userData.data?.points || 0,
         consecutiveDays,
+        bankBalance: bankRes.data?.balance || 0,
+        prizeBalance: prizeRes.data?.balance || 0,
         loading: false,
       });
     }
@@ -99,41 +113,23 @@ export default function DailyAttendance() {
 
     setChecking(true);
     try {
-      // 한국 시간대로 오늘 날짜 계산
-      const now = new Date();
-      const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-      const today = koreaTime.toISOString().split('T')[0];
-
-      // 출석 기록
-      const { error: attendanceError } = await supabase
-        .from("daily_attendance")
-        .insert({
-          user_id: user.id,
-          attended_at: today,
-          points_earned: 10,
-        });
-
-      if (attendanceError) throw attendanceError;
-
-      // 포인트 업데이트
-      const { error: pointsError } = await supabase.rpc("add_points", {
-        user_id: user.id,
-        points: 10,
+      const { data: result, error } = await supabase.rpc("daily_checkin", {
+        p_user_id: user.id,
       });
 
-      // RPC가 없으면 직접 업데이트
-      if (pointsError) {
-        await supabase
-          .from("users")
-          .update({ points: (data.totalPoints || 0) + 10 })
-          .eq("id", user.id);
+      if (error) throw error;
+
+      if (!result.success) {
+        alert(result.message);
+        return;
       }
 
       setData((prev) => ({
         ...prev,
         todayChecked: true,
-        totalPoints: (prev.totalPoints || 0) + 10,
+        totalPoints: prev.totalPoints + result.points_earned,
         consecutiveDays: prev.consecutiveDays + 1,
+        bankBalance: prev.bankBalance - result.points_earned,
       }));
 
       router.refresh();
@@ -145,61 +141,73 @@ export default function DailyAttendance() {
     }
   };
 
-  if (data.loading) {
-    return null;
-  }
-
-  if (!user) {
-    return null;
-  }
-
-  // 출석 완료 시 작게 표시
-  if (data.todayChecked) {
-    return (
-      <div className="bg-green-100 rounded-lg p-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">✅</span>
-          <span className="text-green-800 font-medium">오늘 출석 완료!</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-green-700">
-          <span>🔥 {data.consecutiveDays}일 연속</span>
-          <span>•</span>
-          <span>⭐ {data.totalPoints || 0}P</span>
-        </div>
-      </div>
-    );
-  }
+  if (data.loading) return null;
 
   return (
-    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-xl font-bold">📅 매일 출석 체크</h3>
-          <p className="text-blue-100 text-sm mt-1">하루 한 번, 10포인트 적립!</p>
-        </div>
-        <div className="text-right">
-          <div className="text-3xl font-bold">⭐ {data.totalPoints || 0}</div>
-          <div className="text-blue-100 text-sm">포인트</div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🔥</span>
-          <div>
-            <div className="font-bold">{data.consecutiveDays}일 연속</div>
-            <div className="text-blue-100 text-xs">출석 중</div>
+    <div className="space-y-3">
+      {/* 은행 & 상금 현황 */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-xl shadow p-4 text-center">
+          <div className="text-sm text-gray-500 mb-1">🏦 오늘의 은행</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {data.bankBalance.toLocaleString()}P
           </div>
         </div>
-
-        <button
-          onClick={handleCheckIn}
-          disabled={checking}
-          className="px-6 py-3 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {checking ? "처리 중..." : "🎯 출석하기"}
-        </button>
+        <div className="bg-white rounded-xl shadow p-4 text-center">
+          <div className="text-sm text-gray-500 mb-1">🏆 상금 풀</div>
+          <div className="text-2xl font-bold text-yellow-500">
+            {data.prizeBalance.toLocaleString()}P
+          </div>
+        </div>
       </div>
+
+      {/* 출석 체크 */}
+      {user && (
+        <div
+          className={`rounded-xl shadow-lg p-5 ${
+            data.todayChecked
+              ? "bg-green-50"
+              : "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+          }`}
+        >
+          {data.todayChecked ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">✅</span>
+                <span className="text-green-800 font-medium">
+                  오늘 출석 완료!
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-green-700">
+                <span>🔥 {data.consecutiveDays}일 연속</span>
+                <span>•</span>
+                <span>⭐ {data.totalPoints.toLocaleString()}P</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold text-lg">📅 출석 체크</div>
+                <div className="text-blue-100 text-sm mt-0.5">
+                  🔥 {data.consecutiveDays}일 연속 &nbsp;•&nbsp; ⭐{" "}
+                  {data.totalPoints.toLocaleString()}P 보유
+                </div>
+              </div>
+              <button
+                onClick={handleCheckIn}
+                disabled={checking || data.bankBalance < 10}
+                className="px-5 py-2.5 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {checking
+                  ? "처리 중..."
+                  : data.bankBalance < 10
+                  ? "잔액 부족"
+                  : "🎯 출석하기"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
