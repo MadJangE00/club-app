@@ -52,7 +52,6 @@ export default function JoinButton({ clubId }: Props) {
         .single();
 
       if (!existingUser) {
-        // users 테이블에 사용자 추가
         const userName = (user.user_metadata?.name as string) || user.email?.split("@")[0] || "사용자";
         const { error: userError } = await supabase.from("users").insert({
           id: user.id,
@@ -65,6 +64,13 @@ export default function JoinButton({ clubId }: Props) {
           alert(`사용자 생성 실패: ${userError.message}`);
           return;
         }
+      }
+
+      // 가입 포인트 차감 (3P: 회장 1P + 관리자 1P + 상금 1P)
+      const { data: pointResult } = await supabase.rpc("pay_club_join", { p_club_id: clubId });
+      if (!pointResult?.success) {
+        alert(pointResult?.message || "포인트가 부족합니다 (3P 필요)");
+        return;
       }
 
       const { error } = await supabase.from("club_members").insert({
@@ -137,6 +143,9 @@ export default function JoinButton({ clubId }: Props) {
           .eq("user_id", user.id);
       }
 
+      // 탈퇴 환급 (회장에게서 1P 돌려받음)
+      await supabase.rpc("refund_club_leave", { p_club_id: clubId });
+
       const { error } = await supabase
         .from("club_members")
         .delete()
@@ -182,7 +191,7 @@ export default function JoinButton({ clubId }: Props) {
         onClick={handleLeave}
         className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors"
       >
-        탈퇴하기
+        탈퇴하기 (+1P)
       </button>
     );
   }
@@ -192,7 +201,7 @@ export default function JoinButton({ clubId }: Props) {
       onClick={handleJoin}
       className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
     >
-      가입하기
+      가입하기 (3P)
     </button>
   );
 }
