@@ -143,8 +143,10 @@ export default function JoinButton({ clubId }: Props) {
           .eq("user_id", user.id);
       }
 
-      // 탈퇴 환급 (회장에게서 1P 돌려받음)
-      await supabase.rpc("refund_club_leave", { p_club_id: clubId });
+      // 탈퇴 환급 (회장에게서 1P 돌려받음, 회장 탈퇴 시엔 환급 없음)
+      if (club?.owner_id !== user.id) {
+        await supabase.rpc("refund_club_leave", { p_club_id: clubId });
+      }
 
       const { error } = await supabase
         .from("club_members")
