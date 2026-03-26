@@ -44,8 +44,8 @@ BEGIN
     UPDATE users SET points = points + 1 WHERE id = v_admin_id;
   END IF;
 
-  -- 은행에 1P 추가
-  UPDATE point_bank SET balance = balance + 1 WHERE id = 1;
+  -- 상금풀에 1P 추가
+  UPDATE prize_pool SET balance = balance + 1 WHERE id = 1;
 
   RETURN jsonb_build_object('success', true, 'deducted', v_cost);
 END;
