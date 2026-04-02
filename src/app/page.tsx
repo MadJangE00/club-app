@@ -119,7 +119,6 @@ export default async function Home() {
                     <span className="text-xl w-8 text-center">{medal}</span>
                     <span className="font-semibold text-gray-900">{user.name || "익명"}</span>
                   </div>
-                  <span className="font-bold text-blue-600">{user.points?.toLocaleString() || 0}P</span>
                 </div>
               );
             })}
