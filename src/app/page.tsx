@@ -29,7 +29,7 @@ async function getPointRanking() {
   try {
     const { data } = await supabase
       .from("users")
-      .select("id, name, points")
+      .select("id, name, nickname, points")
       .neq("role", "admin")
       .order("points", { ascending: false })
       .limit(5);
@@ -117,7 +117,7 @@ export default async function Home() {
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-xl w-8 text-center">{medal}</span>
-                    <span className="font-semibold text-gray-900">{user.name || "익명"}</span>
+                    <span className="font-semibold text-gray-900">{user.nickname || user.name || "익명"}</span>
                   </div>
                 </div>
               );
