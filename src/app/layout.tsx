@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthButton from "@/components/AuthButton";
 import AdminLink from "@/components/AdminLink";
+import NoticePopup from "@/components/NoticePopup";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -76,6 +77,7 @@ export default function RootLayout({
             <AdminLink />
           </div>
         </nav>
+        <NoticePopup />
         <main className="max-w-6xl mx-auto px-4 py-8">
           {children}
         </main>

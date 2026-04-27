@@ -137,6 +137,13 @@ export default async function AdminPage() {
             <div className="text-2xl mb-2">📝</div>
             <div className="font-bold text-gray-800">게시글 관리</div>
           </Link>
+          <Link
+            href="/admin/notices"
+            className="p-4 border-2 border-gray-300 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-colors text-center"
+          >
+            <div className="text-2xl mb-2">📢</div>
+            <div className="font-bold text-gray-800">공지사항 관리</div>
+          </Link>
         </div>
       </div>
 
