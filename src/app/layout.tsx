@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthButton from "@/components/AuthButton";
 import AdminLink from "@/components/AdminLink";
-import NoticePopup from "@/components/NoticePopup";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -77,7 +76,15 @@ export default function RootLayout({
             <AdminLink />
           </div>
         </nav>
-        <NoticePopup />
+        {/* 서비스 종료 공지 배너 */}
+        <div className="bg-red-600 text-white text-sm px-4 py-3">
+          <div className="max-w-6xl mx-auto space-y-1">
+            <p className="font-bold">📢 서비스 종료 안내 — 2025년 4월 30일부로 서비스를 종료합니다.</p>
+            <p>사유: 호스팅 플랫폼(Vercel) 해킹 사건으로 인한 종료입니다. 이용해 주셔서 감사합니다.</p>
+            <p>💰 보유 포인트 교환: 1,000P → 커피 쿠폰 1매 또는 맫장 식대 추첨권 1장</p>
+            <p>포인트와 이름이 보이도록 캡처 후 <strong>유진장</strong> 님께 전달하시면 접수됩니다.</p>
+          </div>
+        </div>
         <main className="max-w-6xl mx-auto px-4 py-8">
           {children}
         </main>
